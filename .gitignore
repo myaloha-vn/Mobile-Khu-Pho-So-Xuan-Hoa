@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+.vite/
+_to_delete/
+
+# File media nặng - giữ trên máy hoặc Drive, không đưa vào git
+*.mp4
+*.mov
