@@ -14,7 +14,6 @@ const MODULES: { key: Module; label: string }[] = [
   { key: "literacy", label: "Bình dân học vụ số" },
   { key: "media", label: "Thư viện" },
   { key: "utilities", label: "Tiện ích" },
-  { key: "preview", label: "Xem trước trang" },
   { key: "reports", label: "Báo cáo" },
   { key: "users", label: "Người dùng" },
   { key: "settings", label: "Cấu hình" },

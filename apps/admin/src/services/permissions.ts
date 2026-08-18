@@ -12,17 +12,17 @@ export const MATRIX: Matrix = {
   SUPER_ADMIN: {
     overview: ALL, tasks: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
     waste: ALL, surveys: ALL, literacy: ALL, media: ALL, utilities: ALL,
-    preview: ALL, reports: ALL, users: ALL, settings: ALL,
+    reports: ALL, users: ALL, settings: ALL,
   },
   PHUONG_ADMIN: {
     overview: ALL, tasks: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
     waste: ALL, surveys: ALL, literacy: ALL, media: ALL, utilities: ALL,
-    preview: ALL, reports: ["view", "export"], users: ["view", "create", "edit"],
+    reports: ["view", "export"], users: ["view", "create", "edit"],
     settings: ["view", "edit"],
   },
   CONTENT_EDITOR: {
     overview: VIEW, tasks: VIEW, content: EDIT_DEL, literacy: EDIT_DEL,
-    media: EDIT_DEL, neighborhoods: VIEW, preview: VIEW, reports: VIEW,
+    media: EDIT_DEL, neighborhoods: VIEW, reports: VIEW,
   },
   FEEDBACK_OFFICER: {
     overview: VIEW, tasks: ["view", "edit"], feedback: ["view", "create", "edit", "approve", "export"],
@@ -31,7 +31,7 @@ export const MATRIX: Matrix = {
   NEIGHBORHOOD_LEADER: {
     overview: VIEW, tasks: ["view", "edit"], content: EDIT, literacy: VIEW,
     feedback: ["view", "edit"], neighborhoods: ["view", "edit"], waste: VIEW,
-    surveys: VIEW, media: EDIT, preview: VIEW,
+    surveys: VIEW, media: EDIT,
   },
   NEIGHBORHOOD_STAFF: {
     overview: VIEW, tasks: VIEW, content: ["view", "create"], feedback: VIEW,

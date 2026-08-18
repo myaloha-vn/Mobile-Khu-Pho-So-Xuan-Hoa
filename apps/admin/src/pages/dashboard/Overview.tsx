@@ -263,8 +263,7 @@ export default function Overview() {
 
       {/* Nội dung sắp hiển thị */}
       <Card>
-        <CardHeader title="Nội dung sắp hiển thị cho người dân" icon={<Newspaper size={16} className="text-violet-600" />}
-          action={<Button size="sm" variant="ghost" onClick={() => navigate("/dashboard/preview")}>Xem trước trang</Button>} />
+        <CardHeader title="Nội dung sắp hiển thị cho người dân" icon={<Newspaper size={16} className="text-violet-600" />} />
         {upcoming.length === 0 ? (
           <EmptyState title="Chưa có nội dung chờ hiển thị" />
         ) : (

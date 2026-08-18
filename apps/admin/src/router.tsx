@@ -19,7 +19,6 @@ import WasteSchedulePage from "./pages/waste/WasteSchedule";
 import Surveys from "./pages/surveys/Surveys";
 import MediaLibrary from "./pages/media/MediaLibrary";
 import Utilities from "./pages/utilities/Utilities";
-import Preview from "./pages/preview/Preview";
 import Reports from "./pages/reports/Reports";
 import Users from "./pages/users/Users";
 import Roles from "./pages/users/Roles";
@@ -141,11 +140,6 @@ export function AppRouter() {
             <Route path="/dashboard/utilities" element={
               <Page module="utilities" meta={{ title: "Tiện ích và bản đồ", breadcrumb: [HOME, { label: "Địa bàn" }, { label: "Tiện ích" }] }}>
                 <Utilities />
-              </Page>
-            } />
-            <Route path="/dashboard/preview" element={
-              <Page module="preview" meta={{ title: "Xem trước trang", breadcrumb: [HOME, { label: "Hệ thống" }, { label: "Xem trước trang" }] }}>
-                <Preview />
               </Page>
             } />
             <Route path="/dashboard/reports" element={

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router";
 import {
   LayoutDashboard, MessageSquareWarning, ListTodo, Newspaper, Megaphone,
   CalendarDays, GraduationCap, Images, Building2, Trash2, MapPinned,
-  ClipboardList, Grid3x3, Eye, BarChart3, Users, Settings, X, MonitorPlay,
+  ClipboardList, Grid3x3, BarChart3, Users, Settings, X, MonitorPlay,
   ChevronDown, Newspaper as NewspaperGroup,
 } from "lucide-react";
 import logoXuanHoa from "../../assets/logo-dashboard.png";
@@ -54,7 +54,6 @@ export const MENU: Group[] = [
     items: [
       { to: "/dashboard/surveys", label: "Khảo sát - đăng ký", icon: ClipboardList, module: "surveys" },
       { to: "/dashboard/content/banners", label: "Banner trang chủ", icon: Grid3x3, module: "content" },
-      { to: "/dashboard/preview", label: "Xem trước trang", icon: Eye, module: "preview" },
       { to: "/dashboard/reports", label: "Thống kê - báo cáo", icon: BarChart3, module: "reports" },
       { to: "/dashboard/users", label: "Người dùng", icon: Users, module: "users" },
       { to: "/dashboard/settings", label: "Cấu hình", icon: Settings, module: "settings" },

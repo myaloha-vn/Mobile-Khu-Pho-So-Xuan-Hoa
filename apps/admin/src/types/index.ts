@@ -11,7 +11,7 @@ export type Role =
 export type Module =
   | "overview" | "tasks" | "content" | "feedback" | "neighborhoods"
   | "waste" | "surveys" | "literacy" | "media" | "utilities"
-  | "preview" | "reports" | "users" | "settings";
+  | "reports" | "users" | "settings";
 
 export type Action = "view" | "create" | "edit" | "delete" | "approve" | "publish" | "export";
 

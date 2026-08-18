@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  Bell, ChevronDown, Eye, LogOut, Menu, PanelLeftClose, PanelLeft, Plus, Check,
+  Bell, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeft, Plus, Check,
 } from "lucide-react";
 import { useAuth } from "../../services/auth";
 import { ROLE_LABEL } from "../../services/permissions";
@@ -47,13 +47,6 @@ export function Header({
         <h1 className="flex-1 min-w-0 text-[18px] sm:text-[22px] font-semibold text-slate-900 truncate">{title}</h1>
 
         <span className="hidden xl:block text-[12.5px] text-slate-500">{formatDateTime(new Date())}</span>
-
-        <Allow module="preview">
-          <button onClick={() => navigate("/dashboard/preview")}
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-200 text-[13px] text-slate-600 hover:bg-slate-50">
-            <Eye size={15} /> Xem trước trang
-          </button>
-        </Allow>
 
         {/* Tạo nhanh */}
         <Allow module="content" action="create">
