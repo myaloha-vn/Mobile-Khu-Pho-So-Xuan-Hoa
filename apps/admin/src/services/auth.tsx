@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { Action, Module, User } from "../types";
 import { can as canDo, scopeHoodId } from "./permissions";
 import { getTable } from "./store";
@@ -17,15 +17,24 @@ const Ctx = createContext<AuthValue>({
   user: null, login: () => false, logout: () => {}, can: () => false, hoodScope: null,
 });
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+/**
+ * Đọc lại phiên đăng nhập đã lưu.
+ * Phải chạy ngay lúc khởi tạo state, không được để trong useEffect: useEffect
+ * chỉ chạy SAU lần render đầu, nên RequireAuth sẽ thấy user = null và đá người
+ * dùng về /login mỗi lần tải lại trang (F5).
+ */
+function readSavedUser(): User | null {
+  try {
+    const id = localStorage.getItem(KEY);
+    if (!id) return null;
+    return getTable("users").find((u) => u.id === id) ?? null;
+  } catch {
+    return null;
+  }
+}
 
-  useEffect(() => {
-    try {
-      const id = localStorage.getItem(KEY);
-      if (id) setUser(getTable("users").find((u) => u.id === id) ?? null);
-    } catch { /* bỏ qua */ }
-  }, []);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(readSavedUser);
 
   const value = useMemo<AuthValue>(() => ({
     user,
