@@ -489,12 +489,21 @@ export const statusColor = (s: string) =>
   }[s] ?? "bg-gray-100 text-gray-600");
 export const statusLabel = (s: string) =>
   ({
-    pending: "Chờ xử lý",
-    assigned: "Đã phân công",
+    pending: "Chờ duyệt",
+    assigned: "Chờ xử lý",
     processing: "Đang xử lý",
-    resolved: "Đã giải quyết",
+    resolved: "Đã xử lý",
     rejected: "Từ chối",
   }[s] ?? s);
+/** Mô tả ý nghĩa từng trạng thái - dùng cho phần chú giải ở trang Theo dõi phản ánh. */
+export const statusDesc = (s: string) =>
+  ({
+    pending: "Phản ánh vừa gửi, chờ kiểm duyệt nội dung hợp lệ.",
+    assigned: "Đã duyệt, chuyển tới đơn vị có thẩm quyền.",
+    processing: "Đơn vị đang xác minh, xử lý.",
+    resolved: "Xong, kết quả đã công khai.",
+    rejected: "Không được duyệt, có ghi lý do.",
+  }[s] ?? "");
 
 // ─── HƯỚNG DẪN GỬI PHẢN ÁNH ─────────────────────────────────────────────────
 export const GUIDE_STEPS = [

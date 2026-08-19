@@ -1,14 +1,18 @@
-import { Check, Clock, MapPin, XCircle } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, Clock, Info, MapPin, XCircle } from "lucide-react";
 import { useNavigate } from "react-router";
-import { FEEDBACKS, statusColor, statusLabel } from "../data";
+import { FEEDBACKS, statusColor, statusDesc, statusLabel } from "../data";
 import { AppHeader } from "../components/shared/AppHeader";
 
 // ─── SCREEN: FEEDBACK TRACK ──────────────────────────────────────────────────
 export default function FeedbackTrackScreen() {
   const navigate = useNavigate();
+  const [showLegend, setShowLegend] = useState(false);
   // "Từ chối" không nằm trong tiến trình - đó là nhánh kết thúc riêng, xử lý bên dưới
   const STEPS = ["pending", "assigned", "processing", "resolved"];
-  const STEP_LABELS = ["Chờ xử lý", "Đã phân công", "Đang xử lý", "Đã giải quyết"];
+  const STEP_LABELS = STEPS.map(statusLabel);
+  // Đủ 5 trạng thái (kể cả "Từ chối") để hiện chú giải ý nghĩa từng trạng thái
+  const ALL_STATUSES = ["pending", "assigned", "processing", "resolved", "rejected"];
 
   return (
     <div className="flex-1 flex flex-col bg-[#F5F7FA] overflow-hidden">
@@ -17,6 +21,28 @@ export default function FeedbackTrackScreen() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ scrollbarWidth: "none" }}>
+        {/* Chú giải ý nghĩa các trạng thái */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <button type="button" onClick={() => setShowLegend((v) => !v)}
+            className="w-full flex items-center gap-2 px-4 py-3 active:bg-gray-50">
+            <Info size={15} className="text-[#1565C0] shrink-0" />
+            <span className="flex-1 text-left text-[12.5px] font-bold text-gray-700">Ý nghĩa các trạng thái</span>
+            <ChevronDown size={15} className={`text-gray-400 shrink-0 transition-transform ${showLegend ? "rotate-180" : ""}`} />
+          </button>
+          {showLegend && (
+            <div className="px-4 pb-3.5 pt-0.5 space-y-2.5 border-t border-gray-100">
+              {ALL_STATUSES.map((s) => (
+                <div key={s} className="flex items-start gap-2.5 pt-2.5">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap ${statusColor(s)}`}>
+                    {statusLabel(s)}
+                  </span>
+                  <p className="text-[11.5px] text-gray-500 leading-snug">{statusDesc(s)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {FEEDBACKS.map((fb) => {
           const isRejected = fb.status === "rejected";
           const stepIdx = STEPS.indexOf(fb.status);
