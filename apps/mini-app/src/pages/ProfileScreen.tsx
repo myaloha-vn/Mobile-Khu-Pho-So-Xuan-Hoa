@@ -59,7 +59,7 @@ export default function ProfileScreen() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-[13px] font-extrabold text-gray-800">Thông tin chủ hộ</p>
             {household && (
-              <button onClick={() => navigate("/neighborhood")}
+              <button onClick={() => navigate("/profile/edit")}
                 className="text-[11px] text-[#1565C0] font-semibold flex items-center gap-1 active:opacity-60">
                 <Edit3 size={11} /> Cập nhật
               </button>

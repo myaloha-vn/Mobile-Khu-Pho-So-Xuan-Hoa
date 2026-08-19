@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Clock, Info, Trash2, Users } from "lucide-react";
+import { ChevronDown, Clock, Info, Phone, Trash2, Users } from "lucide-react";
 import { useNavigate } from "react-router";
 import { NEIGHBORHOODS, WASTE_SCHEDULE } from "../data";
 import { useHousehold } from "../hooks/useAppStorage";
@@ -67,6 +67,15 @@ export default function WasteScreen() {
                 <div className="flex items-center gap-2 text-[12px] text-gray-500">
                   <Users size={13} className="text-[#1565C0] shrink-0" /> {w.provider}
                 </div>
+              </div>
+              <div className="mt-3.5 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-[12px] text-gray-500">
+                  <Phone size={13} className="text-[#1565C0] shrink-0" /> {w.providerPhone}
+                </span>
+                <a href={`tel:${w.providerPhone.replace(/\s/g, "")}`}
+                  className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shadow-sm active:scale-90 transition-transform shrink-0">
+                  <Phone size={14} className="text-white" />
+                </a>
               </div>
             </div>
           ))

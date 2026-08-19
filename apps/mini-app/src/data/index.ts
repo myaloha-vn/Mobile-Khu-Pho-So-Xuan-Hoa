@@ -163,6 +163,7 @@ export const WASTE_SCHEDULE = Array.from({ length: 18 }, (_, i) => ({
   time: i % 2 === 0 ? "05:00 - 07:00" : "17:00 - 19:00",
   type: i % 3 === 0 ? "Rác sinh hoạt" : i % 3 === 1 ? "Rác tái chế" : "Rác cồng kềnh",
   provider: "Công ty Dịch vụ công ích",
+  providerPhone: "1900 545439",
 }));
 
 // ─── Học vụ số (Bình dân học vụ số) ───────────────────────────────────────
@@ -310,6 +311,10 @@ export const NEIGHBORHOODS = Array.from({ length: 18 }, (_, i) => {
     leader,
     phone: `09${String((10 + i * 3) % 90).padStart(2, "0")}.${String((100 + i * 37) % 900 + 100).padStart(3, "0")}.${String((200 + i * 53) % 800 + 100).padStart(3, "0")}`,
     image: `https://images.unsplash.com/${img}?w=400&h=200&fit=crop&auto=format`,
+    // Nhóm Zalo chính thức của khu phố - nơi bà con trao đổi, nhận thông báo
+    // nhanh từ Ban điều hành khu phố.
+    zaloGroupUrl: `https://zalo.me/g/kp${i + 1}xh${String(100000 + i * 733).slice(-6)}`,
+    zaloGroupMembers: 60 + ((i * 23) % 180),
     board: [
       { name: leader, role: "Trưởng khu phố", phone: `09${String((10+i*3)%90).padStart(2,"0")}.${String((100+i*37)%900+100).padStart(3,"0")}.${String((200+i*53)%800+100).padStart(3,"0")}` },
       { name: LEADER_NAMES[(i+1)%18], role: "Bí thư Chi bộ", phone: `09${String((20+i*2)%80+10).padStart(2,"0")}.${String((200+i*17)%800+100).padStart(3,"0")}.${String((300+i*41)%700+100).padStart(3,"0")}` },

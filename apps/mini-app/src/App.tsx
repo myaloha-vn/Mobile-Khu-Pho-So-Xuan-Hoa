@@ -14,6 +14,7 @@ import FeedbackTrackScreen from "./pages/FeedbackTrackScreen";
 import FeedbackGuideScreen from "./pages/FeedbackGuideScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import ProfileScreen from "./pages/ProfileScreen";
+import ProfileEditScreen from "./pages/ProfileEditScreen";
 import SuggestionScreen from "./pages/SuggestionScreen";
 import UtilitiesScreen from "./pages/UtilitiesScreen";
 import MapScreen from "./pages/MapScreen";
@@ -49,6 +50,7 @@ export default function App() {
 
         <Route path="notifications" element={<NotificationsScreen />} />
         <Route path="profile" element={<ProfileScreen />} />
+        <Route path="profile/edit" element={<ProfileEditScreen />} />
         <Route path="suggestion" element={<SuggestionScreen />} />
         <Route path="saved" element={<SavedScreen />} />
 

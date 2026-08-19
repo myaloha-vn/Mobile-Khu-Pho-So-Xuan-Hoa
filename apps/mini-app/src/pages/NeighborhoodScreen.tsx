@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import {
-  CheckCircle2, ChevronDown, ChevronRight, Edit3, MapPin, Phone, Search, User, Users, X,
+  ChevronDown, ChevronRight, Edit3, MapPin, Phone, Search, User, Users, X,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { NEIGHBORHOODS, groupStyle, type Household } from "../data";
@@ -17,16 +17,16 @@ export default function NeighborhoodScreen() {
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [household, setHousehold] = useHousehold();
-  const [editing, setEditing] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 700); return () => clearTimeout(t); }, []);
 
   const myHood = household ? NEIGHBORHOODS[household.hoodId - 1] : null;
 
   const commit = (h: Household) => {
-    setHousehold(h); setEditing(false);
-    setJustSaved(true); setTimeout(() => setJustSaved(false), 2600);
+    setHousehold(h);
+    // Khai báo xong thì vào thẳng trang khu phố đã chọn luôn, không cần dừng
+    // lại ở trang danh sách nữa.
+    navigate(`/neighborhood/${h.hoodId}`);
   };
 
   const filtered = NEIGHBORHOODS.filter(
@@ -41,16 +41,14 @@ export default function NeighborhoodScreen() {
   };
 
   // ── Chưa khai báo → hiển thị form khai báo ──
-  if (!household || editing) {
+  if (!household) {
     return (
       <div className="flex-1 flex flex-col bg-[#F5F7FA] overflow-hidden">
         <div className="bg-[#1565C0] shrink-0">
-          <AppHeader title={editing ? "Cập nhật khai báo" : "Khai báo hộ gia đình"}
-            onBack={() => (editing ? setEditing(false) : navigate("/"))} />
+          <AppHeader title="Khai báo hộ gia đình" onBack={() => navigate("/")} />
         </div>
         <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-          <HouseholdForm initial={editing ? household : null} onSubmit={commit}
-            onCancel={editing ? () => setEditing(false) : undefined} />
+          <HouseholdForm initial={null} onSubmit={commit} />
         </div>
       </div>
     );
@@ -74,21 +72,12 @@ export default function NeighborhoodScreen() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: "none" }}>
-        <AnimatePresence>
-          {justSaved && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="mb-3 flex items-center gap-2 rounded-xl bg-green-50 border border-green-100 px-3 py-2.5 text-[12px] font-semibold text-green-700">
-              <CheckCircle2 size={15} /> Đã ghi nhận: bạn thuộc {myHood!.name}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Khu phố của tôi */}
         {myHood && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-[13px] font-extrabold text-gray-800">Khu phố của tôi</h3>
-              <button onClick={() => setEditing(true)}
+              <button onClick={() => navigate("/profile/edit")}
                 className="text-[11px] text-[#1565C0] font-semibold flex items-center gap-1 active:opacity-60">
                 <Edit3 size={11} /> Sửa khai báo
               </button>

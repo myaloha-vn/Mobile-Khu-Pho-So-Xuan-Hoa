@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AlertCircle, Check, CheckCircle2, ChevronDown, X } from "lucide-react";
 import {
@@ -19,6 +19,17 @@ export function HouseholdForm({
   const [groupOpen, setGroupOpen] = useState(false);
   const [touchedHood, setTouchedHood] = useState(!!initial);
   const [err, setErr] = useState("");
+  const groupDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Danh sách nhóm đối tượng thường tràn xuống dưới màn hình khi mở ở gần
+  // cuối form - tự cuộn để thấy hết toàn bộ danh sách thay vì bị che khuất.
+  useEffect(() => {
+    if (!groupOpen) return;
+    const id = requestAnimationFrame(() => {
+      groupDropdownRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [groupOpen]);
 
   // Tự nhận diện khu phố khi người dân nhập địa chỉ
   useEffect(() => {
@@ -142,6 +153,7 @@ export function HouseholdForm({
           <AnimatePresence>
             {groupOpen && (
               <motion.div
+                ref={groupDropdownRef}
                 initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}
                 className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">

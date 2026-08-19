@@ -2,13 +2,14 @@ import { useState } from "react";
 import { AnimatePresence } from "motion/react";
 import {
   ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight, Clock, FileText, GraduationCap, Home,
-  MapPin, Megaphone, Phone, Search, Trash2, Users, X,
+  MapPin, Megaphone, MessageCircle, Phone, Search, Trash2, Users, X,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { FEEDBACKS, LITERACY, NEIGHBORHOODS, NEWS, WASTE_SCHEDULE, statusColor, statusLabel } from "../data";
 import { useSafeBack } from "../hooks/useSafeBack";
 import { EmptyState } from "../components/shared/EmptyState";
 import { NeighborhoodSwitcherModal } from "../components/shared/NeighborhoodSwitcherModal";
+import neighborhoodHeaderBg from "../assets/neighborhood-header-bg.webp";
 
 // ─── SCREEN: NEIGHBORHOOD DETAIL ─────────────────────────────────────────────
 export default function NeighborhoodDetailScreen() {
@@ -49,10 +50,10 @@ export default function NeighborhoodDetailScreen() {
   return (
     <div className="relative flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto bg-[#F5F7FA]" style={{ scrollbarWidth: "none" }}>
-        {/* Cover */}
+        {/* Cover - hình nền công nghệ xanh (đã nén WebP) do người dùng cung cấp */}
         <div className="relative h-40 bg-blue-900 shrink-0">
-          <img src={hood.image} alt={hood.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/45 to-black/70" />
+          <img src={neighborhoodHeaderBg} alt="" className="w-full h-full object-cover" style={{ filter: "brightness(1.2)" }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/45" />
           <button onClick={goBack}
             className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/35 flex items-center justify-center backdrop-blur-sm active:opacity-60">
             <ChevronLeft size={20} className="text-white" />
@@ -84,6 +85,24 @@ export default function NeighborhoodDetailScreen() {
             </div>
           ))}
         </div>
+
+        {/* Nhóm Zalo khu phố - nổi bật để dễ truy cập, dùng đúng brand blue của Zalo */}
+        <a href={hood.zaloGroupUrl} target="_blank" rel="noopener noreferrer"
+          className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#0068FF] to-[#2F9BFF] px-4 py-3.5 shadow-lg shadow-blue-200 active:opacity-90 transition-opacity">
+          <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+            <MessageCircle size={22} className="text-[#0068FF]" fill="#0068FF" strokeWidth={0} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-extrabold text-[13.5px] leading-tight">Nhóm Zalo {hood.name}</p>
+            <p className="text-blue-50 text-[11px] mt-0.5">
+              {hood.zaloGroupMembers} thành viên · Nhận tin nhanh từ Ban điều hành
+            </p>
+          </div>
+          <span className="shrink-0 flex items-center gap-1 bg-white/20 rounded-full pl-2.5 pr-1.5 py-1">
+            <span className="text-white text-[10.5px] font-bold">Tham gia</span>
+            <ChevronRight size={14} className="text-white" />
+          </span>
+        </a>
 
         {/* Management Board */}
         <div className="mx-4 mt-4">
