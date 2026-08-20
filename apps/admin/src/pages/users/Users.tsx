@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyRound, Lock, Plus, Unlock, Users as UsersIcon } from "lucide-react";
+import { Lock, Plus, Unlock, Users as UsersIcon } from "lucide-react";
 import { Card, CardHeader, Badge, Button } from "../../components/common/ui";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { FilterBar, SearchInput, Select } from "../../components/common/Filters";
@@ -33,13 +33,11 @@ export default function Users() {
 
   const columns: Column<User>[] = [
     { key: "name", header: "Họ tên", mobile: "title", render: (r) => <span className="font-medium text-slate-800">{r.fullName}</span> },
-    { key: "username", header: "Tài khoản", mobile: "meta", render: (r) => <span className="font-mono text-[12.5px]">{r.username}</span> },
-    { key: "unit", header: "Đơn vị", mobile: "meta", render: (r) => r.unit },
-    { key: "hood", header: "Khu phố", mobile: "meta", render: (r) => (r.hoodId ? `Khu phố ${r.hoodId}` : "Toàn phường") },
+    { key: "email", header: "Email", mobile: "meta", render: (r) => r.email },
+    { key: "phone", header: "SĐT", mobile: "meta", render: (r) => r.phone },
     { key: "role", header: "Vai trò", mobile: "badge", render: (r) => <Badge tone="violet">{ROLE_LABEL[r.role]}</Badge> },
-    { key: "phone", header: "Điện thoại", mobile: "meta", render: (r) => r.phone },
+    { key: "hood", header: "Khu phố", mobile: "meta", render: (r) => (r.hoodId ? `Khu phố ${r.hoodId}` : "Toàn phường") },
     { key: "login", header: "Đăng nhập gần nhất", mobile: "meta", render: (r) => fmtDateTime(r.lastLogin) },
-    { key: "status", header: "Trạng thái", mobile: "badge", render: (r) => <Badge tone={r.status === "active" ? "green" : "red"}>{r.status === "active" ? "Đang hoạt động" : "Đã khoá"}</Badge> },
     {
       key: "act", header: "Thao tác",
       render: (r) => (
@@ -50,8 +48,6 @@ export default function Users() {
               className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
               {r.status === "active" ? <Lock size={13} /> : <Unlock size={13} />}
             </button>
-            <button title="Đặt lại mật khẩu" onClick={() => toast(`Đã đặt lại mật khẩu cho ${r.username}`)}
-              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500"><KeyRound size={13} /></button>
           </Allow>
         </div>
       ),

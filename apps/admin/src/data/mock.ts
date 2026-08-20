@@ -9,7 +9,10 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 214748364
 const pick = <T,>(arr: T[]) => arr[Math.floor(rnd() * arr.length)];
 const int = (a: number, b: number) => a + Math.floor(rnd() * (b - a + 1));
 
-export const TODAY = new Date("2026-08-04T08:00:00");
+// Neo theo ngày thực tế hiện tại (thay vì một mốc cố định trong quá khứ) để dữ liệu mẫu
+// luôn "gần đây" mỗi khi mở app — nếu không, các biểu đồ xu hướng theo thời gian sẽ dần
+// trống rỗng khi ngày thực tế trôi xa khỏi mốc cố định.
+export const TODAY = new Date();
 const dayOffset = (d: number, h = 9) => {
   const t = new Date(TODAY);
   t.setDate(t.getDate() + d);
@@ -115,15 +118,28 @@ const FB_SUMMARIES = [
   "Đường ngập sau mưa lớn",
   "Chó thả rông không rọ mõm trong khu dân cư",
 ];
-const FB_STATUS: FeedbackStatus[] = ["new", "assigned", "processing", "waiting", "completed", "reopened"];
+// Phân bố trạng thái mô phỏng thực tế: nhiều hồ sơ đang/đã xử lý, ít hồ sơ mới hoặc bị từ chối
+const FB_STATUS: FeedbackStatus[] = [
+  "pending_review", "pending", "pending", "processing", "processing", "processing",
+  "resolved", "resolved", "resolved", "rejected",
+];
+const REJECT_REASONS = [
+  "Nội dung phản ánh không rõ ràng, thiếu thông tin để xác minh.",
+  "Trùng lặp với phản ánh đã tiếp nhận trước đó.",
+  "Không thuộc phạm vi xử lý của UBND phường.",
+];
 
 export const FEEDBACKS: Feedback[] = Array.from({ length: 30 }, (_, i) => {
   const hoodId = int(1, 18);
-  const status = i < 5 ? "new" : FB_STATUS[i % FB_STATUS.length];
+  const status = FB_STATUS[i % FB_STATUS.length];
   const created = dayOffset(-int(0, 21), int(7, 18));
   const due = dayOffset(-int(0, 21) + 7, 17);
   const priority: Priority = i % 9 === 0 ? "urgent" : i % 4 === 0 ? "high" : "normal";
-  const assignee = status === "new" ? null : pick(["u-feedback", "u-phuong", `u-hood-${hoodId}`]);
+  const hasAssignee = status === "processing" || status === "resolved";
+  const assignee = hasAssignee ? pick(["u-feedback", "u-phuong", `u-hood-${hoodId}`]) : null;
+  const reviewedAt = dayOffset(-int(0, 5), 9);
+  const assignedAt = dayOffset(-int(0, 4), 10);
+  const resolvedAt = dayOffset(-int(0, 3), 15);
   return {
     id: `fb-${i + 1}`,
     code: `PK${String(1000 + i + 1)}`,
@@ -143,12 +159,19 @@ export const FEEDBACKS: Feedback[] = Array.from({ length: 30 }, (_, i) => {
     priority,
     timeline: [
       { at: created, by: "Hệ thống", action: "Tiếp nhận phản ánh từ ứng dụng Xuân Hoà Số" },
-      ...(assignee ? [{ at: dayOffset(-int(0, 5), 10), by: "Phạm Thu Hà", action: "Phân công xử lý" }] : []),
-      ...(status === "completed"
-        ? [{ at: dayOffset(-int(0, 3), 15), by: userById(assignee)?.fullName ?? "Cán bộ", action: "Hoàn thành xử lý", note: "Đã xử lý xong và phản hồi người dân." }]
+      ...(status === "rejected"
+        ? [{ at: reviewedAt, by: "Phạm Thu Hà", action: "Từ chối tiếp nhận", note: REJECT_REASONS[i % REJECT_REASONS.length] }]
+        : status !== "pending_review"
+          ? [{ at: reviewedAt, by: "Phạm Thu Hà", action: "Duyệt tiếp nhận phản ánh" }]
+          : []),
+      ...(hasAssignee ? [{ at: assignedAt, by: "Phạm Thu Hà", action: "Phân công xử lý" }] : []),
+      ...(status === "resolved"
+        ? [{ at: resolvedAt, by: userById(assignee)?.fullName ?? "Cán bộ", action: "Đã xử lý", note: "Đã xử lý xong và phản hồi người dân." }]
         : []),
     ],
-    result: status === "completed" ? "Đã xử lý xong, hiện trường được khắc phục và có ảnh nghiệm thu." : undefined,
+    result: status === "resolved"
+      ? "Đã xử lý xong, hiện trường được khắc phục và có ảnh nghiệm thu."
+      : status === "rejected" ? REJECT_REASONS[i % REJECT_REASONS.length] : undefined,
   };
 });
 
@@ -191,7 +214,7 @@ const LITERACY = [
   { t: "Quét mã QR thanh toán an toàn", topic: "Thanh toán số" },
   { t: "Gửi phản ánh kiến nghị đúng cách trên Xuân Hoà Số", topic: "Xuân Hoà Số" },
 ];
-const STATUSES: ContentStatus[] = ["draft", "pending", "needs_revision", "approved", "scheduled", "published", "hidden"];
+const STATUSES: ContentStatus[] = ["draft", "pending", "scheduled", "published"];
 
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d")
@@ -293,7 +316,7 @@ export const SURVEYS: Survey[] = [
   limit: i % 4 === 0 ? 200 : null,
   responses: int(12, 480),
   publicResult: i % 2 === 0,
-  status: i % 5 === 0 ? "draft" : i % 7 === 3 ? "closed" : "open",
+  status: i % 5 === 0 ? "pending" : i % 7 === 3 ? "closed" : "open",
   questions: [
     { id: "q1", label: "Họ và tên", type: "text", required: true },
     { id: "q2", label: "Khu phố đang sinh sống", type: "single", required: true, options: NEIGHBORHOODS.map((n) => n.name) },
@@ -358,12 +381,12 @@ export const LOGS: ActivityLog[] = Array.from({ length: 24 }, (_, i) => {
 
 // ─── Thông báo nội bộ ────────────────────────────────────────────────────────
 export const NOTIFICATIONS: Notification[] = [
-  { kind: "feedback", title: "3 phản ánh mới cần tiếp nhận", description: "Khu phố 3, 7 và 12 vừa có phản ánh mới.", link: "/dashboard/feedback?tab=new" },
-  { kind: "feedback", title: "2 phản ánh sắp quá hạn", description: "Còn dưới 24 giờ so với hạn xử lý.", link: "/dashboard/feedback?tab=due" },
-  { kind: "content", title: "1 nội dung chờ duyệt", description: "Trưởng khu phố 7 vừa gửi duyệt bài viết.", link: "/dashboard/content?status=pending" },
-  { kind: "content", title: "Bài viết của bạn đã được duyệt", description: "Nội dung sẽ xuất bản theo lịch đã đặt.", link: "/dashboard/content" },
-  { kind: "event", title: "2 hoạt động sắp diễn ra", description: "Trong 7 ngày tới trên địa bàn phường.", link: "/dashboard/content/events" },
-  { kind: "survey", title: "1 khảo sát sắp đóng", description: "Khảo sát mức độ hài lòng sẽ đóng trong 2 ngày.", link: "/dashboard/surveys" },
+  { kind: "feedback", title: "3 phản ánh mới cần duyệt", description: "Khu phố 3, 7 và 12 vừa có phản ánh mới.", link: "/workspace/feedback?tab=pending_review" },
+  { kind: "feedback", title: "2 phản ánh sắp quá hạn", description: "Còn dưới 24 giờ so với hạn xử lý.", link: "/workspace/feedback?tab=due" },
+  { kind: "content", title: "1 nội dung chờ duyệt", description: "Trưởng khu phố 7 vừa gửi duyệt bài viết.", link: "/workspace/content?status=pending" },
+  { kind: "content", title: "Bài viết của bạn đã được duyệt", description: "Nội dung sẽ xuất bản theo lịch đã đặt.", link: "/workspace/content" },
+  { kind: "event", title: "2 hoạt động sắp diễn ra", description: "Trong 7 ngày tới trên địa bàn phường.", link: "/workspace/content/events" },
+  { kind: "survey", title: "1 khảo sát sắp đóng", description: "Khảo sát mức độ hài lòng sẽ đóng trong 2 ngày.", link: "/workspace/surveys" },
 ].map((n, i) => ({ ...n, id: `nt-${i + 1}`, at: dayOffset(0, 8 - i), read: i > 3, hoodId: null } as Notification));
 
 // ─── Cấu hình trang chủ và đơn vị ────────────────────────────────────────────

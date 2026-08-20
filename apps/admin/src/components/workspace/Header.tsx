@@ -58,10 +58,10 @@ export function Header({
             {openCreate && (
               <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50">
                 {[
-                  { label: "Đăng tin tức", to: "/dashboard/content/create?type=news" },
-                  { label: "Tạo thông báo", to: "/dashboard/content/create?type=announcement" },
-                  { label: "Tạo lịch hoạt động", to: "/dashboard/content/create?type=event" },
-                  { label: "Tiếp nhận phản ánh", to: "/dashboard/feedback?tab=new" },
+                  { label: "Đăng tin tức", to: "/workspace/content/create?type=news" },
+                  { label: "Tạo thông báo", to: "/workspace/content/create?type=announcement" },
+                  { label: "Tạo lịch hoạt động", to: "/workspace/content/create?type=event" },
+                  { label: "Tiếp nhận phản ánh", to: "/workspace/feedback?tab=pending_review" },
                 ].map((i) => (
                   <button key={i.to} onClick={() => { setOpenCreate(false); navigate(i.to); }}
                     className="w-full text-left px-4 py-2 text-[13px] text-slate-700 hover:bg-slate-50">

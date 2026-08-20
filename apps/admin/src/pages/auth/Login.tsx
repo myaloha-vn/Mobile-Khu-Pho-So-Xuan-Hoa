@@ -21,7 +21,7 @@ export default function Login() {
     if (!username.trim()) return setError("Vui lòng nhập tên tài khoản");
     if (!password.trim()) return setError("Vui lòng nhập mật khẩu");
     if (!login(username.trim())) return setError("Tài khoản không tồn tại hoặc đã bị khoá");
-    navigate("/dashboard/overview");
+    navigate("/workspace/overview");
   };
 
   return (
@@ -33,7 +33,7 @@ export default function Login() {
             <img src={logoXuanHoa} alt="Logo phường Xuân Hoà" className="w-12 h-12 object-contain" />
             <div>
               <p className="text-[17px] font-semibold text-slate-900 leading-tight">Xuân Hoà Số</p>
-              <p className="text-[12.5px] text-slate-500">Dashboard điều hành</p>
+              <p className="text-[12.5px] text-slate-500">Workspace điều hành</p>
             </div>
           </div>
 

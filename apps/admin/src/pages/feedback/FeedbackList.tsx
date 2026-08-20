@@ -1,27 +1,40 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Download, MessageSquareWarning } from "lucide-react";
+import { MessageSquareWarning } from "lucide-react";
 import { Card, CardHeader, StatusBadge, PriorityBadge, Button, Badge } from "../../components/common/ui";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { FilterBar, SearchInput, Select, DateRange, Tabs } from "../../components/common/Filters";
-import { Allow } from "../../components/common/Guards";
 import { useAuth } from "../../services/auth";
 import { useTable } from "../../services/store";
 import { useScopedFeedbacks } from "../../hooks/useScoped";
 import { FEEDBACK_FIELDS } from "../../data/mock";
-import { csvDownload, fmtDate, slaState } from "../../utils/format";
+import { fmtDate, slaState } from "../../utils/format";
 import type { Feedback } from "../../types";
 
 const TABS = [
   { key: "all", label: "Tất cả" },
-  { key: "new", label: "Mới tiếp nhận" },
-  { key: "unassigned", label: "Chưa phân công" },
+  { key: "pending_review", label: "Chờ duyệt" },
+  { key: "pending", label: "Chờ xử lý" },
   { key: "processing", label: "Đang xử lý" },
-  { key: "due", label: "Sắp quá hạn" },
+  { key: "due", label: "Sắp đến hạn" },
   { key: "overdue", label: "Quá hạn" },
-  { key: "completed", label: "Đã hoàn thành" },
-  { key: "waiting", label: "Cần bổ sung" },
+  { key: "resolved", label: "Đã xử lý" },
+  { key: "rejected", label: "Từ chối" },
 ];
+
+function matchTab(f: Feedback, tab: string) {
+  const sla = slaState(f.dueAt, f.status);
+  switch (tab) {
+    case "pending_review": return f.status === "pending_review";
+    case "pending": return f.status === "pending";
+    case "processing": return f.status === "processing";
+    case "due": return sla === "due_soon";
+    case "overdue": return sla === "overdue";
+    case "resolved": return f.status === "resolved";
+    case "rejected": return f.status === "rejected";
+    default: return true;
+  }
+}
 
 export default function FeedbackList() {
   const navigate = useNavigate();
@@ -39,22 +52,8 @@ export default function FeedbackList() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const byTab = (f: Feedback) => {
-    const sla = slaState(f.dueAt, f.status);
-    switch (tab) {
-      case "new": return f.status === "new";
-      case "unassigned": return !f.assigneeId;
-      case "processing": return ["assigned", "processing"].includes(f.status);
-      case "due": return sla === "due_soon" && f.status !== "completed";
-      case "overdue": return sla === "overdue" && f.status !== "completed";
-      case "completed": return f.status === "completed";
-      case "waiting": return f.status === "waiting";
-      default: return true;
-    }
-  };
-
   const rows = useMemo(() => rowsAll.filter((f) => {
-    if (!byTab(f)) return false;
+    if (!matchTab(f, tab)) return false;
     if (q && !`${f.code} ${f.summary} ${f.content}`.toLowerCase().includes(q.toLowerCase())) return false;
     if (hood && f.hoodId !== Number(hood)) return false;
     if (field && f.field !== field) return false;
@@ -67,19 +66,7 @@ export default function FeedbackList() {
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     TABS.forEach((t) => {
-      c[t.key] = rowsAll.filter((f) => {
-        const sla = slaState(f.dueAt, f.status);
-        switch (t.key) {
-          case "new": return f.status === "new";
-          case "unassigned": return !f.assigneeId;
-          case "processing": return ["assigned", "processing"].includes(f.status);
-          case "due": return sla === "due_soon" && f.status !== "completed";
-          case "overdue": return sla === "overdue" && f.status !== "completed";
-          case "completed": return f.status === "completed";
-          case "waiting": return f.status === "waiting";
-          default: return true;
-        }
-      }).length;
+      c[t.key] = rowsAll.filter((f) => matchTab(f, t.key)).length;
     });
     return c;
   }, [rowsAll]);
@@ -105,27 +92,12 @@ export default function FeedbackList() {
     { key: "assignee", header: "Phụ trách", mobile: "meta", render: (r) => users.find((u) => u.id === r.assigneeId)?.fullName ?? "Chưa phân công" },
     { key: "priority", header: "Ưu tiên", mobile: "badge", render: (r) => <PriorityBadge priority={r.priority} /> },
     { key: "status", header: "Trạng thái", mobile: "badge", render: (r) => <StatusBadge status={r.status} kind="feedback" /> },
-    { key: "act", header: "Thao tác", render: (r) => <Button size="sm" variant="secondary" onClick={() => navigate(`/dashboard/feedback/${r.id}`)}>Xem</Button> },
+    { key: "act", header: "Thao tác", render: (r) => <Button size="sm" variant="secondary" onClick={() => navigate(`/workspace/feedback/${r.id}`)}>Xem</Button> },
   ];
-
-  const exportCsv = () => {
-    csvDownload("phan-anh-kien-nghi.csv", [
-      ["Mã", "Nội dung", "Khu phố", "Lĩnh vực", "Ngày nhận", "Hạn xử lý", "Phụ trách", "Trạng thái"],
-      ...rows.map((r) => [
-        r.code, r.summary, `Khu phố ${r.hoodId}`, r.field, fmtDate(r.createdAt), fmtDate(r.dueAt),
-        users.find((u) => u.id === r.assigneeId)?.fullName ?? "Chưa phân công", r.status,
-      ]),
-    ]);
-  };
 
   return (
     <Card>
-      <CardHeader title="Danh sách phản ánh kiến nghị" icon={<MessageSquareWarning size={16} className="text-blue-600" />}
-        action={
-          <Allow module="feedback" action="export">
-            <Button size="sm" variant="secondary" icon={<Download size={14} />} onClick={exportCsv}>Xuất CSV</Button>
-          </Allow>
-        } />
+      <CardHeader title="Danh sách phản ánh kiến nghị" icon={<MessageSquareWarning size={16} className="text-blue-600" />} />
       <Tabs tabs={TABS.map((t) => ({ ...t, count: counts[t.key] }))} active={tab}
         onChange={(k) => setParams(k === "all" ? {} : { tab: k })} />
       <FilterBar>
@@ -139,7 +111,7 @@ export default function FeedbackList() {
         <DateRange from={from} to={to} onFrom={setFrom} onTo={setTo} />
       </FilterBar>
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.id}
-        onRowClick={(r) => navigate(`/dashboard/feedback/${r.id}`)}
+        onRowClick={(r) => navigate(`/workspace/feedback/${r.id}`)}
         emptyTitle="Không có phản ánh phù hợp"
         emptyDescription="Thay đổi bộ lọc hoặc chọn tab khác để xem thêm dữ liệu." />
     </Card>

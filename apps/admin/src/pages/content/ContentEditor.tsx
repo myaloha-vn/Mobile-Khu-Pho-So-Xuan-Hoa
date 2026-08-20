@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { ArrowLeft, Eye, Save, Send, History as HistoryIcon } from "lucide-react";
-import { Card, CardHeader, Button, StatusBadge, Badge } from "../../components/common/ui";
+import { ArrowLeft, Eye, Save, Send, History as HistoryIcon, Upload } from "lucide-react";
+import { Card, CardHeader, Button, StatusBadge, Badge, MultiSelect, HtmlEditor } from "../../components/common/ui";
 import { ConfirmDialog, RightDrawer, useToast } from "../../components/common/Overlays";
 import { useAuth } from "../../services/auth";
 import { pushLog, pushNotification, useTable } from "../../services/store";
-import { CONTENT_TYPE_LABEL, img } from "../../data/mock";
-import { fmtDateTime, slugify, toInputDate } from "../../utils/format";
+import { CONTENT_TYPE_LABEL } from "../../data/mock";
+import { fmtDateTime, toInputDate } from "../../utils/format";
 import type { ContentItem, ContentType } from "../../types";
 
 const TYPES: ContentType[] = ["news", "announcement", "event", "banner", "literacy"];
@@ -21,19 +21,23 @@ export default function ContentEditor() {
   const [neighborhoods] = useTable("neighborhoods");
 
   const existing = useMemo(() => all.find((c) => c.id === id) ?? null, [all, id]);
-  const [form, setForm] = useState<ContentItem>(() =>
-    existing ?? {
+  const [form, setForm] = useState<ContentItem>(() => {
+    if (existing) {
+      // Khởi tạo hoodIds từ hoodId cũ nếu chưa có
+      return { ...existing, hoodIds: existing.hoodIds ?? (existing.hoodId ? [existing.hoodId] : null) };
+    }
+    return {
       id: `ct-${Date.now()}`,
       type: (params.get("type") as ContentType) ?? "news",
       title: "", slug: "", excerpt: "", body: "",
       image: img(2, 800, 450), gallery: [],
-      hoodId: hoodScope ?? null, authorId: user?.id ?? "u-editor",
+      hoodId: hoodScope ?? null, hoodIds: hoodScope ? [hoodScope] : null, authorId: user?.id ?? "u-editor",
       status: "draft", createdAt: new Date().toISOString(),
       publishedAt: null, scheduledAt: null, startAt: null, endAt: null, place: "",
       pinned: false, featured: false, views: 0,
       history: [{ at: new Date().toISOString(), by: user?.fullName ?? "Cán bộ", action: "created" }],
-    }
-  );
+    };
+  });
   const [dirty, setDirty] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [preview, setPreview] = useState(false);
@@ -48,7 +52,7 @@ export default function ContentEditor() {
   }, [dirty]);
 
   const set = <K extends keyof ContentItem>(key: K, value: ContentItem[K]) => {
-    setForm((f) => ({ ...f, [key]: value, ...(key === "title" ? { slug: slugify(String(value)) } : {}) }));
+    setForm((f) => ({ ...f, [key]: value }));
     setDirty(true);
   };
 
@@ -80,7 +84,7 @@ export default function ContentEditor() {
     persist({ status: "pending" }, "submitted", "Đã gửi duyệt nội dung");
     pushNotification({
       kind: "content", title: "Nội dung mới chờ duyệt",
-      description: `${form.title} vừa được gửi duyệt.`, link: "/dashboard/content/news?status=pending", hoodId: form.hoodId,
+      description: `${form.title} vừa được gửi duyệt.`, link: "/workspace/content/news?status=pending", hoodId: form.hoodId,
     });
     setConfirmSubmit(false);
     navigate(-1);
@@ -122,28 +126,14 @@ export default function ContentEditor() {
               {errors.title && <p className="text-[11.5px] text-red-600 mt-1">{errors.title}</p>}
             </div>
             <div>
-              <label className={label}>Đường dẫn (slug)</label>
-              <input value={form.slug} onChange={(e) => set("slug", e.target.value)} className={`${field} text-slate-500`} />
-            </div>
-            <div>
               <label className={label}>Mô tả ngắn <span className="text-red-500">*</span></label>
               <textarea value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} rows={2} className={`${field} resize-none`} />
               {errors.excerpt && <p className="text-[11.5px] text-red-600 mt-1">{errors.excerpt}</p>}
             </div>
             <div>
               <label className={label}>Nội dung <span className="text-red-500">*</span></label>
-              <textarea value={form.body} onChange={(e) => set("body", e.target.value)} rows={12} className={`${field} resize-y leading-relaxed`} />
+              <HtmlEditor value={form.body} onChange={(html) => set("body", html)} rows={12} />
               {errors.body && <p className="text-[11.5px] text-red-600 mt-1">{errors.body}</p>}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={label}>SEO title</label>
-                <input value={form.seoTitle ?? ""} onChange={(e) => set("seoTitle", e.target.value)} className={field} />
-              </div>
-              <div>
-                <label className={label}>SEO description</label>
-                <input value={form.seoDescription ?? ""} onChange={(e) => set("seoDescription", e.target.value)} className={field} />
-              </div>
             </div>
           </div>
         </Card>
@@ -160,12 +150,17 @@ export default function ContentEditor() {
               </div>
               <div>
                 <label className={label}>Khu vực hiển thị</label>
-                <select value={form.hoodId ?? ""} disabled={!!hoodScope}
-                  onChange={(e) => set("hoodId", e.target.value ? Number(e.target.value) : null)}
-                  className={`${field} disabled:bg-slate-50`}>
-                  <option value="">Toàn phường</option>
-                  {neighborhoods.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
-                </select>
+                <MultiSelect
+                  options={neighborhoods.map((n) => ({ value: String(n.id), label: n.name }))}
+                  selected={(form.hoodIds ?? []).map(String)}
+                  onChange={(vals) => {
+                    const nums = vals.map(Number);
+                    setForm((f) => ({ ...f, hoodIds: nums.length ? nums : null, hoodId: nums.length === 1 ? nums[0] : null }));
+                    setDirty(true);
+                  }}
+                  placeholder="Toàn phường"
+                  searchPlaceholder="Tìm khu phố..."
+                />
                 {hoodScope && <p className="text-[11.5px] text-slate-400 mt-1">Tài khoản khu phố chỉ đăng nội dung cho khu phố được phân công.</p>}
               </div>
               {form.type === "event" && (
@@ -211,10 +206,6 @@ export default function ContentEditor() {
               </div>
               <div className="flex flex-col gap-2 pt-1">
                 <label className="flex items-center gap-2 text-[13px] text-slate-700">
-                  <input type="checkbox" checked={form.pinned} onChange={(e) => set("pinned", e.target.checked)} className="w-4 h-4" />
-                  Ghim lên trang chủ
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-slate-700">
                   <input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} className="w-4 h-4" />
                   Đánh dấu nổi bật
                 </label>
@@ -225,19 +216,23 @@ export default function ContentEditor() {
           <Card>
             <CardHeader title="Hình ảnh" />
             <div className="px-5 py-4 space-y-3">
-              <img src={form.image} alt="" className="w-full h-40 rounded-lg object-cover border border-slate-100" />
-              <div>
-                <label className={label}>Đường dẫn ảnh đại diện</label>
-                <input value={form.image} onChange={(e) => set("image", e.target.value)} className={field} />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <button key={i} onClick={() => set("image", img(i, 800, 450))}
-                    className="rounded-lg overflow-hidden border border-slate-200 hover:border-blue-400">
-                    <img src={img(i, 200, 120)} alt="" className="w-full h-12 object-cover" />
-                  </button>
-                ))}
-              </div>
+              <img src={form.image} alt="" className="w-full aspect-video rounded-lg object-cover border border-slate-100" />
+              <label className="flex items-center justify-center gap-2 w-full rounded-lg border border-dashed border-slate-300 px-3 py-3 text-[13px] text-slate-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-colors cursor-pointer">
+                <Upload size={16} />
+                Tải lên ảnh khác
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setForm((f) => ({ ...f, image: reader.result as string }));
+                      setDirty(true);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                  e.target.value = "";
+                }} />
+              </label>
             </div>
           </Card>
         </div>
@@ -245,9 +240,9 @@ export default function ContentEditor() {
 
       <RightDrawer open={preview} title="Xem trước nội dung" onClose={() => setPreview(false)} width="max-w-xl">
         <article className="space-y-3">
-          <img src={form.image} alt="" className="w-full h-48 rounded-xl object-cover" />
+          <img src={form.image} alt="" className="w-full aspect-video rounded-xl object-cover" />
           <h1 className="text-[20px] font-semibold text-slate-900 leading-snug">{form.title || "(Chưa có tiêu đề)"}</h1>
-          <p className="text-[13px] text-slate-500">{CONTENT_TYPE_LABEL[form.type]} · {form.hoodId ? `Khu phố ${form.hoodId}` : "Toàn phường"}</p>
+          <p className="text-[13px] text-slate-500">{CONTENT_TYPE_LABEL[form.type]} · {(form.hoodIds ?? []).length ? form.hoodIds!.map((id) => `Khu phố ${id}`).join(", ") : "Toàn phường"}</p>
           <p className="text-[13.5px] text-slate-700 font-medium">{form.excerpt}</p>
           {form.body.split("\n").filter(Boolean).map((p, i) => (
             <p key={i} className="text-[13.5px] text-slate-700 leading-relaxed">{p}</p>

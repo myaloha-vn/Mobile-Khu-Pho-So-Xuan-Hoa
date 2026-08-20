@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ClipboardList, Plus, Trash2 } from "lucide-react";
-import { Card, CardHeader, Badge, Button } from "../../components/common/ui";
+import { Card, CardHeader, Badge, Button, MultiSelect } from "../../components/common/ui";
 import { DataTable, type Column } from "../../components/common/DataTable";
 import { FilterBar, SearchInput, Select } from "../../components/common/Filters";
 import { ConfirmDialog, RightDrawer, useToast } from "../../components/common/Overlays";
@@ -17,7 +17,7 @@ const KIND_LABEL: Record<string, string> = {
 const EMPTY: Survey = {
   id: "", title: "", description: "", kind: "survey",
   openAt: new Date().toISOString(), closeAt: new Date().toISOString(),
-  hoodIds: null, limit: null, responses: 0, publicResult: false, status: "draft",
+  hoodIds: null, limit: null, responses: 0, publicResult: false, status: "pending",
   questions: [{ id: "q1", label: "Họ và tên", type: "text", required: true }],
 };
 
@@ -45,8 +45,8 @@ export default function Surveys() {
     { key: "area", header: "Khu vực", mobile: "meta", render: (r) => (r.hoodIds ? r.hoodIds.map((i) => `KP ${i}`).join(", ") : "Toàn phường") },
     {
       key: "status", header: "Trạng thái", mobile: "badge",
-      render: (r) => <Badge tone={r.status === "open" ? "green" : r.status === "draft" ? "slate" : "amber"}>
-        {r.status === "open" ? "Đang mở" : r.status === "draft" ? "Nháp" : "Đã đóng"}
+      render: (r) => <Badge tone={r.status === "open" ? "green" : r.status === "pending" ? "slate" : "amber"}>
+        {r.status === "open" ? "Đang mở" : r.status === "pending" ? "Chưa mở" : "Đã đóng"}
       </Badge>,
     },
     {
@@ -91,7 +91,7 @@ export default function Surveys() {
           <Select value={kind} onChange={setKind} placeholder="Tất cả loại"
             options={Object.entries(KIND_LABEL).map(([value, label]) => ({ value, label }))} />
           <Select value={status} onChange={setStatus} placeholder="Tất cả trạng thái"
-            options={[{ value: "draft", label: "Nháp" }, { value: "open", label: "Đang mở" }, { value: "closed", label: "Đã đóng" }]} />
+            options={[{ value: "pending", label: "Chưa mở" }, { value: "open", label: "Đang mở" }, { value: "closed", label: "Đã đóng" }]} />
         </FilterBar>
         <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} emptyTitle="Chưa có biểu mẫu" />
       </Card>
@@ -130,14 +130,16 @@ export default function Surveys() {
             </div>
             <div>
               <label className={label}>Khu vực áp dụng</label>
-              <select multiple value={(editing.hoodIds ?? []).map(String)}
-                onChange={(e) => {
-                  const vals = Array.from(e.target.selectedOptions).map((o) => Number(o.value));
-                  setEditing({ ...editing, hoodIds: vals.length ? vals : null });
+              <MultiSelect
+                options={hoods.map((h) => ({ value: String(h.id), label: h.name }))}
+                selected={(editing.hoodIds ?? []).map(String)}
+                onChange={(vals) => {
+                  const nums = vals.map(Number);
+                  setEditing({ ...editing, hoodIds: nums.length ? nums : null });
                 }}
-                className={`${field} h-28`}>
-                {hoods.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
-              </select>
+                placeholder="Chọn khu phố (để trống = toàn phường)"
+                searchPlaceholder="Tìm khu phố..."
+              />
               <p className="text-[11.5px] text-slate-400 mt-1">Không chọn khu phố nào nghĩa là áp dụng toàn phường.</p>
             </div>
             <label className="flex items-center gap-2 text-[13px] text-slate-700">
@@ -174,9 +176,13 @@ export default function Surveys() {
                 ))}
               </div>
               <Button size="sm" variant="secondary" className="mt-2"
+                disabled={editing.questions.length >= 10}
                 onClick={() => setEditing({ ...editing, questions: [...editing.questions, { id: `q${Date.now()}`, label: "", type: "text", required: false }] })}>
                 Thêm câu hỏi
               </Button>
+              {editing.questions.length >= 10 && (
+                <p className="text-[11.5px] text-amber-500 mt-1">Đạt giới hạn tối đa 10 câu hỏi.</p>
+              )}
             </div>
           </div>
         )}

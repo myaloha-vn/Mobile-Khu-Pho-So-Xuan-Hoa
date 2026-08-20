@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
-  ArrowLeft, CheckCircle2, ClipboardCheck, MapPin, Phone, RefreshCw, Send, UserPlus, AlertTriangle,
+  ArrowLeft, CheckCircle2, ClipboardCheck, MapPin, Phone, Send, UserPlus, AlertTriangle, XCircle,
 } from "lucide-react";
 import { Card, CardHeader, StatusBadge, PriorityBadge, Badge, Button, ErrorState } from "../../components/common/ui";
 import { ConfirmDialog, RightDrawer, useToast } from "../../components/common/Overlays";
@@ -26,6 +26,8 @@ export default function FeedbackDetail() {
   const [progress, setProgress] = useState("");
   const [confirmDone, setConfirmDone] = useState(false);
   const [result, setResult] = useState("");
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fb = feedbacks.find((f) => f.id === id);
   if (!fb) return <ErrorState message="Không tìm thấy phản ánh." />;
@@ -50,18 +52,17 @@ export default function FeedbackDetail() {
   const left = daysLeft(fb.dueAt);
 
   const STATUS_FLOW: { key: FeedbackStatus; label: string }[] = [
-    { key: "new", label: "Đã tiếp nhận" },
-    { key: "assigned", label: "Đã phân công" },
+    { key: "pending_review", label: "Chờ duyệt" },
+    { key: "pending", label: "Chờ xử lý" },
     { key: "processing", label: "Đang xử lý" },
-    { key: "waiting", label: "Chờ phản hồi" },
-    { key: "completed", label: "Đã hoàn thành" },
+    { key: "resolved", label: "Đã xử lý" },
   ];
   const activeIdx = Math.max(0, STATUS_FLOW.findIndex((s) => s.key === fb.status));
 
   return (
     <>
       <div className="flex items-center gap-3">
-        <Button variant="secondary" size="sm" icon={<ArrowLeft size={14} />} onClick={() => navigate("/dashboard/feedback")}>
+        <Button variant="secondary" size="sm" icon={<ArrowLeft size={14} />} onClick={() => navigate("/workspace/feedback")}>
           Quay lại
         </Button>
         <span className="font-mono text-[13px] text-slate-500">{fb.code}</span>
@@ -101,16 +102,22 @@ export default function FeedbackDetail() {
           <Card>
             <CardHeader title="Tiến trình xử lý" icon={<ClipboardCheck size={16} className="text-blue-600" />} />
             <div className="px-5 py-4">
-              <div className="flex flex-wrap gap-2 mb-5">
-                {STATUS_FLOW.map((s, i) => (
-                  <span key={s.key}
-                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium border ${
-                      i <= activeIdx ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-400 border-slate-200"
-                    }`}>
-                    {s.label}
-                  </span>
-                ))}
-              </div>
+              {fb.status === "rejected" ? (
+                <div className="flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[12px] font-medium border bg-red-50 text-red-700 border-red-200 w-fit">
+                  <XCircle size={14} /> Đã từ chối tiếp nhận
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {STATUS_FLOW.map((s, i) => (
+                    <span key={s.key}
+                      className={`px-3 py-1.5 rounded-full text-[12px] font-medium border ${
+                        i <= activeIdx ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-slate-50 text-slate-400 border-slate-200"
+                      }`}>
+                      {s.label}
+                    </span>
+                  ))}
+                </div>
+              )}
               <ol className="space-y-4">
                 {fb.timeline.map((t, i) => (
                   <li key={i} className="flex gap-3">
@@ -160,41 +167,46 @@ export default function FeedbackDetail() {
             </Card>
           </Allow>
 
-          <Allow module="feedback" action="edit">
-            <Card>
-              <CardHeader title="Thao tác" />
-              <div className="px-5 py-4 flex flex-col gap-2">
-                {fb.status === "new" && (
-                  <Button icon={<CheckCircle2 size={15} />}
-                    onClick={() => { update({ status: "assigned" }, "Tiếp nhận hồ sơ"); toast("Đã tiếp nhận hồ sơ"); }}>
-                    Tiếp nhận
-                  </Button>
-                )}
-                <Button variant="secondary" icon={<UserPlus size={15} />} onClick={() => setAssignOpen(true)}>
-                  Phân công / chuyển xử lý
-                </Button>
-                <Button variant="secondary" icon={<Send size={15} />} onClick={() => setProgressOpen(true)}>
-                  Cập nhật tiến độ
-                </Button>
-                <Button variant="secondary"
-                  onClick={() => { update({ status: "waiting" }, "Yêu cầu người dân bổ sung thông tin"); toast("Đã gửi yêu cầu bổ sung", "info"); }}>
-                  Yêu cầu bổ sung
-                </Button>
-                {fb.status !== "completed" ? (
-                  <Button icon={<CheckCircle2 size={15} />} onClick={() => setConfirmDone(true)}>Hoàn thành</Button>
-                ) : (
-                  <Button variant="secondary" icon={<RefreshCw size={15} />}
-                    onClick={() => { update({ status: "reopened" }, "Mở lại hồ sơ"); toast("Đã mở lại hồ sơ", "info"); }}>
-                    Mở lại hồ sơ
-                  </Button>
-                )}
-              </div>
-            </Card>
-          </Allow>
+          {(fb.status === "pending_review" || fb.status === "pending" || fb.status === "processing") && (
+            <Allow module="feedback" action="edit">
+              <Card>
+                <CardHeader title="Thao tác" />
+                <div className="px-5 py-4 flex flex-col gap-2">
+                  {fb.status === "pending_review" && (
+                    <Allow module="feedback" action="approve">
+                      <Button icon={<CheckCircle2 size={15} />}
+                        onClick={() => { update({ status: "pending" }, "Duyệt tiếp nhận phản ánh"); toast("Đã duyệt tiếp nhận"); }}>
+                        Duyệt tiếp nhận
+                      </Button>
+                      <Button variant="danger" icon={<XCircle size={15} />} onClick={() => setRejectOpen(true)}>
+                        Từ chối tiếp nhận
+                      </Button>
+                    </Allow>
+                  )}
+                  {fb.status === "pending" && (
+                    <Button variant="secondary" icon={<UserPlus size={15} />} onClick={() => setAssignOpen(true)}>
+                      Phân công xử lý
+                    </Button>
+                  )}
+                  {fb.status === "processing" && (
+                    <>
+                      <Button variant="secondary" icon={<UserPlus size={15} />} onClick={() => setAssignOpen(true)}>
+                        Phân công lại
+                      </Button>
+                      <Button variant="secondary" icon={<Send size={15} />} onClick={() => setProgressOpen(true)}>
+                        Cập nhật tiến độ
+                      </Button>
+                      <Button icon={<CheckCircle2 size={15} />} onClick={() => setConfirmDone(true)}>Đánh dấu đã xử lý</Button>
+                    </>
+                  )}
+                </div>
+              </Card>
+            </Allow>
+          )}
 
           {fb.result && (
             <Card>
-              <CardHeader title="Kết quả xử lý" />
+              <CardHeader title={fb.status === "rejected" ? "Lý do từ chối" : "Kết quả xử lý"} />
               <p className="px-5 py-4 text-[13px] text-slate-700 leading-relaxed">{fb.result}</p>
             </Card>
           )}
@@ -208,7 +220,7 @@ export default function FeedbackDetail() {
             <Button disabled={!assignee}
               onClick={() => {
                 const u = users.find((x) => x.id === assignee);
-                update({ assigneeId: assignee, unit: u?.unit ?? null, status: "assigned" }, `Phân công cho ${u?.fullName}`, note);
+                update({ assigneeId: assignee, unit: u?.unit ?? null, status: "processing" }, `Phân công cho ${u?.fullName}`, note);
                 setAssignOpen(false); setNote("");
                 toast("Đã phân công xử lý");
               }}>
@@ -250,14 +262,34 @@ export default function FeedbackDetail() {
           placeholder="Mô tả công việc đã thực hiện..." />
       </RightDrawer>
 
-      <ConfirmDialog open={confirmDone} title="Xác nhận hoàn thành xử lý"
-        description="Hồ sơ sẽ chuyển sang trạng thái Hoàn thành và gửi kết quả đến người dân."
-        confirmLabel="Hoàn thành"
+      <RightDrawer open={rejectOpen} title="Từ chối tiếp nhận" onClose={() => setRejectOpen(false)}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRejectOpen(false)}>Huỷ</Button>
+            <Button variant="danger" disabled={!rejectReason.trim()}
+              onClick={() => {
+                update({ status: "rejected", result: rejectReason }, "Từ chối tiếp nhận", rejectReason);
+                setRejectOpen(false); setRejectReason("");
+                toast("Đã từ chối tiếp nhận phản ánh", "info");
+              }}>
+              Xác nhận từ chối
+            </Button>
+          </>
+        }>
+        <label className="block text-[12.5px] font-medium text-slate-700 mb-1.5">Lý do từ chối <span className="text-red-500">*</span></label>
+        <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={5}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] outline-none focus:border-blue-500 resize-none"
+          placeholder="Ví dụ: nội dung không rõ ràng, trùng lặp, không thuộc phạm vi xử lý..." />
+      </RightDrawer>
+
+      <ConfirmDialog open={confirmDone} title="Xác nhận đã xử lý"
+        description="Hồ sơ sẽ chuyển sang trạng thái Đã xử lý và gửi kết quả đến người dân."
+        confirmLabel="Đã xử lý"
         onCancel={() => setConfirmDone(false)}
         onConfirm={() => {
-          update({ status: "completed", result: result || "Đã xử lý xong và phản hồi người dân." }, "Hoàn thành xử lý", result);
+          update({ status: "resolved", result: result || "Đã xử lý xong và phản hồi người dân." }, "Đã xử lý", result);
           setConfirmDone(false); setResult("");
-          toast("Đã hoàn thành hồ sơ");
+          toast("Đã cập nhật hồ sơ sang Đã xử lý");
         }} />
     </>
   );

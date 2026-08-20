@@ -5,7 +5,7 @@ Dự án gồm **2 ứng dụng độc lập** nằm chung một repo:
 | Thư mục          | Ứng dụng                    | Mô tả                                                                 |
 |------------------|-----------------------------|-----------------------------------------------------------------------|
 | `apps/mini-app`  | Mini App cho người dân      | Giao diện Zalo Mini App: tin tức, phản ánh, tiện ích khu phố, trợ lý ảo |
-| `apps/admin`     | Hệ thống điều hành          | Dashboard quản trị 16 module, màn hình LED, giao diện mobile cho cán bộ |
+| `apps/admin`     | Hệ thống điều hành          | Workspace quản trị 16 module, màn hình LED, giao diện mobile cho cán bộ |
 | `shared/styles`  | Dùng chung                  | Font, Tailwind, biến theme                                            |
 
 Hai app **không import lẫn nhau**. Có thể build và deploy riêng biệt.

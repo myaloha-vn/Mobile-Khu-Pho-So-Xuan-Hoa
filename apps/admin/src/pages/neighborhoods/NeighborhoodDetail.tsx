@@ -58,7 +58,7 @@ export default function NeighborhoodDetail() {
     return (
       <div className="divide-y divide-slate-100">
         {rows.map((c) => (
-          <button key={c.id} onClick={() => navigate(`/dashboard/content/${c.id}/edit`)}
+          <button key={c.id} onClick={() => navigate(`/workspace/content/${c.id}/edit`)}
             className="w-full flex gap-3 px-5 py-3 text-left hover:bg-slate-50">
             <img src={c.image} alt="" className="w-20 h-14 rounded-lg object-cover shrink-0" />
             <div className="min-w-0 flex-1">
@@ -75,7 +75,7 @@ export default function NeighborhoodDetail() {
   return (
     <>
       <div className="flex items-center gap-3">
-        <Button variant="secondary" size="sm" icon={<ArrowLeft size={14} />} onClick={() => navigate("/dashboard/neighborhoods")}>Quay lại</Button>
+        <Button variant="secondary" size="sm" icon={<ArrowLeft size={14} />} onClick={() => navigate("/workspace/neighborhoods")}>Quay lại</Button>
         <h2 className="text-[16px] font-semibold text-slate-900">{hood.name}</h2>
         <Badge tone={hood.active ? "green" : "slate"}>{hood.active ? "Đang hoạt động" : "Tạm ngưng"}</Badge>
       </div>
@@ -88,7 +88,7 @@ export default function NeighborhoodDetail() {
             {[
               ["Dân số", `${hood.population.toLocaleString()} người`],
               ["Hộ gia đình", `${hood.households} hộ`],
-              ["Phản ánh đang mở", String(hoodFeedbacks.filter((f) => f.status !== "completed").length)],
+              ["Phản ánh đang mở", String(hoodFeedbacks.filter((f) => !["resolved", "rejected"].includes(f.status)).length)],
               ["Tin đã xuất bản", String(contents.filter((c) => c.hoodId === hood.id && c.status === "published").length)],
             ].map(([k, v]) => (
               <div key={k} className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
@@ -158,7 +158,7 @@ export default function NeighborhoodDetail() {
           hoodFeedbacks.length === 0 ? <EmptyState title="Chưa có phản ánh" /> : (
             <div className="divide-y divide-slate-100">
               {hoodFeedbacks.map((f) => (
-                <button key={f.id} onClick={() => navigate(`/dashboard/feedback/${f.id}`)}
+                <button key={f.id} onClick={() => navigate(`/workspace/feedback/${f.id}`)}
                   className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-slate-50">
                   <span className="font-mono text-[12px] text-slate-500 w-16 shrink-0">{f.code}</span>
                   <span className="flex-1 min-w-0 text-[13px] text-slate-800 line-clamp-1">{f.summary}</span>

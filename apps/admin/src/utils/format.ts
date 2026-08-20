@@ -32,8 +32,10 @@ export function daysLeft(dueIso: string) {
 }
 
 export type SlaState = "overdue" | "due_soon" | "ok";
+/** Cảnh báo hạn xử lý chỉ áp dụng khi hồ sơ đang thực sự chờ/đang xử lý —
+ *  hồ sơ chưa duyệt, đã xử lý xong hoặc bị từ chối thì không tính hạn. */
 export function slaState(dueIso: string, status: string): SlaState {
-  if (status === "completed") return "ok";
+  if (status === "pending_review" || status === "resolved" || status === "rejected") return "ok";
   const d = daysLeft(dueIso);
   if (d < 0) return "overdue";
   if (d <= 2) return "due_soon";

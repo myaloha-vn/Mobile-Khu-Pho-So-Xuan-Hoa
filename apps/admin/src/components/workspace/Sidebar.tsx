@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import {
-  LayoutDashboard, MessageSquareWarning, ListTodo, Newspaper, Megaphone,
+  LayoutDashboard, MessageSquareWarning, Newspaper, Megaphone,
   CalendarDays, GraduationCap, Images, Building2, Trash2, MapPinned,
-  ClipboardList, Grid3x3, BarChart3, Users, Settings, X, MonitorPlay,
+  ClipboardList, Grid3x3, BarChart3, Users, Settings, ShieldCheck, X, MonitorPlay,
   ChevronDown, Newspaper as NewspaperGroup,
 } from "lucide-react";
 import logoXuanHoa from "../../assets/logo-dashboard.png";
@@ -15,7 +15,7 @@ interface Group { title: string; icon: typeof LayoutDashboard; items: Item[] }
 
 /** Mục lớn độc lập, không có danh mục con - đặt trên đầu sidebar */
 export const TOP_ITEM: Item = {
-  to: "/dashboard/led", label: "Màn hình LED điều hành", icon: MonitorPlay, module: "overview",
+  to: "/workspace/led", label: "Màn hình LED điều hành", icon: MonitorPlay, module: "overview",
 };
 
 export const MENU: Group[] = [
@@ -23,40 +23,40 @@ export const MENU: Group[] = [
     title: "Điều hành",
     icon: LayoutDashboard,
     items: [
-      { to: "/dashboard/overview", label: "Tổng quan", icon: LayoutDashboard, module: "overview" },
-      { to: "/dashboard/feedback", label: "Phản ánh kiến nghị", icon: MessageSquareWarning, module: "feedback" },
-      { to: "/dashboard/tasks", label: "Công việc cần xử lý", icon: ListTodo, module: "tasks" },
+      { to: "/workspace/overview", label: "Tổng quan", icon: LayoutDashboard, module: "overview" },
+      { to: "/workspace/feedback", label: "Phản ánh kiến nghị", icon: MessageSquareWarning, module: "feedback" },
+      { to: "/workspace/surveys", label: "Khảo sát - đăng ký", icon: ClipboardList, module: "surveys" },
     ],
   },
   {
     title: "Nội dung",
     icon: NewspaperGroup,
     items: [
-      { to: "/dashboard/content/news", label: "Tin tức", icon: Newspaper, module: "content" },
-      { to: "/dashboard/content/announcements", label: "Thông báo", icon: Megaphone, module: "content" },
-      { to: "/dashboard/content/events", label: "Lịch hoạt động", icon: CalendarDays, module: "content" },
-      { to: "/dashboard/digital-literacy", label: "Bình dân học vụ số", icon: GraduationCap, module: "literacy" },
-      { to: "/dashboard/media", label: "Thư viện ảnh - video", icon: Images, module: "media" },
+      { to: "/workspace/content/news", label: "Tin tức", icon: Newspaper, module: "content" },
+      { to: "/workspace/content/announcements", label: "Thông báo", icon: Megaphone, module: "content" },
+      { to: "/workspace/content/events", label: "Lịch hoạt động", icon: CalendarDays, module: "content" },
+      { to: "/workspace/content/banners", label: "Banner trang chủ", icon: Grid3x3, module: "content" },
+      { to: "/workspace/digital-literacy", label: "Bình dân học vụ số", icon: GraduationCap, module: "literacy" },
+      { to: "/workspace/media", label: "Thư viện ảnh - video", icon: Images, module: "media" },
     ],
   },
   {
     title: "Địa bàn",
     icon: MapPinned,
     items: [
-      { to: "/dashboard/neighborhoods", label: "Khu phố", icon: Building2, module: "neighborhoods" },
-      { to: "/dashboard/waste-schedule", label: "Lịch thu gom rác", icon: Trash2, module: "waste" },
-      { to: "/dashboard/utilities", label: "Bản đồ tiện ích", icon: MapPinned, module: "utilities" },
+      { to: "/workspace/neighborhoods", label: "Khu phố", icon: Building2, module: "neighborhoods" },
+      { to: "/workspace/waste-schedule", label: "Lịch thu gom rác", icon: Trash2, module: "waste" },
+      { to: "/workspace/utilities", label: "Bản đồ tiện ích", icon: MapPinned, module: "utilities" },
     ],
   },
   {
-    title: "Hệ thống",
+    title: "Báo cáo & Quản trị",
     icon: Settings,
     items: [
-      { to: "/dashboard/surveys", label: "Khảo sát - đăng ký", icon: ClipboardList, module: "surveys" },
-      { to: "/dashboard/content/banners", label: "Banner trang chủ", icon: Grid3x3, module: "content" },
-      { to: "/dashboard/reports", label: "Thống kê - báo cáo", icon: BarChart3, module: "reports" },
-      { to: "/dashboard/users", label: "Người dùng", icon: Users, module: "users" },
-      { to: "/dashboard/settings", label: "Cấu hình", icon: Settings, module: "settings" },
+      { to: "/workspace/reports", label: "Thống kê - báo cáo", icon: BarChart3, module: "reports" },
+      { to: "/workspace/users", label: "Người dùng", icon: Users, module: "users" },
+      { to: "/workspace/roles", label: "Vai trò và phân quyền", icon: ShieldCheck, module: "users" },
+      { to: "/workspace/settings", label: "Cấu hình", icon: Settings, module: "settings" },
     ],
   },
 ];
@@ -87,7 +87,7 @@ export function Sidebar({ collapsed, mobileOpen, onCloseMobile }: {
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-[14px] font-semibold text-slate-900 leading-tight truncate">Xuân Hoà Số</p>
-            <p className="text-[11.5px] text-slate-500 leading-tight">Dashboard điều hành</p>
+            <p className="text-[11.5px] text-slate-500 leading-tight">Workspace điều hành</p>
           </div>
         )}
       </div>

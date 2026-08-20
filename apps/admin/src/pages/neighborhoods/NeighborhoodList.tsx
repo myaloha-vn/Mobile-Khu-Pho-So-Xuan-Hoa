@@ -33,7 +33,7 @@ export default function NeighborhoodList() {
     },
     {
       key: "open", header: "Phản ánh đang mở", mobile: "meta",
-      render: (r) => feedbacks.filter((f) => f.hoodId === r.id && f.status !== "completed").length,
+      render: (r) => feedbacks.filter((f) => f.hoodId === r.id && !["resolved", "rejected"].includes(f.status)).length,
     },
     {
       key: "events", header: "Lịch sắp tới", mobile: "meta",
@@ -42,7 +42,7 @@ export default function NeighborhoodList() {
     { key: "waste", header: "Lịch rác", mobile: "meta", render: (r) => waste.filter((w) => w.hoodId === r.id).length },
     { key: "last", header: "Cập nhật gần nhất", mobile: "meta", render: (r) => fmtDateTime(r.lastUpdate) },
     { key: "status", header: "Trạng thái", mobile: "badge", render: (r) => <Badge tone={r.active ? "green" : "slate"}>{r.active ? "Đang hoạt động" : "Tạm ngưng"}</Badge> },
-    { key: "act", header: "Thao tác", render: (r) => <Button size="sm" variant="secondary" onClick={() => navigate(`/dashboard/neighborhoods/${r.id}`)}>Chi tiết</Button> },
+    { key: "act", header: "Thao tác", render: (r) => <Button size="sm" variant="secondary" onClick={() => navigate(`/workspace/neighborhoods/${r.id}`)}>Chi tiết</Button> },
   ];
 
   return (
@@ -54,7 +54,7 @@ export default function NeighborhoodList() {
           options={[{ value: "active", label: "Đang hoạt động" }, { value: "paused", label: "Tạm ngưng" }]} />
       </FilterBar>
       <DataTable columns={columns} rows={rows} rowKey={(r) => String(r.id)}
-        onRowClick={(r) => navigate(`/dashboard/neighborhoods/${r.id}`)} emptyTitle="Không tìm thấy khu phố"
+        onRowClick={(r) => navigate(`/workspace/neighborhoods/${r.id}`)} emptyTitle="Không tìm thấy khu phố"
         pageSizeOptions={[10, 20, 50]} />
     </Card>
   );

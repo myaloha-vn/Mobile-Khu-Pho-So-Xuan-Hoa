@@ -57,7 +57,7 @@ export default function Reports() {
   const ct = contents.filter((c) => !hood || c.hoodId === Number(hood));
 
   const overdue = fb.filter((f) => slaState(f.dueAt, f.status) === "overdue");
-  const done = fb.filter((f) => f.status === "completed");
+  const done = fb.filter((f) => f.status === "resolved");
   const onTimeRate = fb.length ? Math.round(((fb.length - overdue.length) / fb.length) * 100) : 0;
 
   // ── Phản ánh theo tuần (4 tuần gần nhất) ──────────────────────────────────
@@ -65,15 +65,15 @@ export default function Reports() {
     const buckets = [3, 2, 1, 0].map((w) => ({
       name: w === 0 ? "Tuần này" : `${w} tuần trước`,
       min: -(w + 1) * 7, max: -w * 7,
-      "Tiếp nhận": 0, "Hoàn thành": 0,
+      "Tiếp nhận": 0, "Đã xử lý": 0,
     }));
     fb.forEach((f) => {
       const d = daysLeft(f.createdAt);
       const b = buckets.find((x) => d > x.min && d <= x.max);
       if (b) b["Tiếp nhận"] += 1;
-      if (f.status === "completed") {
+      if (f.status === "resolved") {
         const b2 = buckets.find((x) => d > x.min && d <= x.max);
-        if (b2) b2["Hoàn thành"] += 1;
+        if (b2) b2["Đã xử lý"] += 1;
       }
     });
     return buckets;
@@ -82,12 +82,11 @@ export default function Reports() {
   // ── Trạng thái xử lý ──────────────────────────────────────────────────────
   const byStatus = useMemo(() => {
     const map: Record<string, { label: string; color: string }> = {
-      new: { label: "Mới tiếp nhận", color: BLUE },
-      assigned: { label: "Đã phân công", color: VIOLET },
+      pending_review: { label: "Chờ duyệt", color: VIOLET },
+      pending: { label: "Chờ xử lý", color: BLUE },
       processing: { label: "Đang xử lý", color: ORANGE },
-      waiting: { label: "Chờ bổ sung", color: SLATE },
-      completed: { label: "Hoàn thành", color: GREEN },
-      reopened: { label: "Mở lại", color: RED },
+      resolved: { label: "Đã xử lý", color: GREEN },
+      rejected: { label: "Từ chối", color: RED },
     };
     return Object.entries(map)
       .map(([k, v]) => ({ name: v.label, value: fb.filter((f) => f.status === k).length, color: v.color }))
@@ -104,7 +103,7 @@ export default function Reports() {
   // ── Theo khu phố ──────────────────────────────────────────────────────────
   const byHood = useMemo(() => hoods.map((h) => ({
     name: `KP ${h.id}`,
-    "Đang mở": fb.filter((f) => f.hoodId === h.id && f.status !== "completed").length,
+    "Đang mở": fb.filter((f) => f.hoodId === h.id && !["resolved", "rejected"].includes(f.status)).length,
     "Quá hạn": fb.filter((f) => f.hoodId === h.id && slaState(f.dueAt, f.status) === "overdue").length,
     "Đã đăng": contents.filter((c) => c.hoodId === h.id && c.status === "published").length,
     "Chờ duyệt": contents.filter((c) => c.hoodId === h.id && c.status === "pending").length,
@@ -141,7 +140,7 @@ export default function Reports() {
     { label: "Tổng phản ánh", value: fb.length, tone: "text-blue-600" },
     { label: "Tỷ lệ đúng hạn", value: `${onTimeRate}%`, tone: "text-emerald-600" },
     { label: "Quá hạn", value: overdue.length, tone: "text-red-600" },
-    { label: "Đã hoàn thành", value: done.length, tone: "text-slate-800" },
+    { label: "Đã xử lý", value: done.length, tone: "text-slate-800" },
     { label: "Nội dung đã đăng", value: ct.filter((c) => c.status === "published").length, tone: "text-violet-600" },
     { label: "Lượt xem nội dung", value: ct.reduce((a, c) => a + c.views, 0).toLocaleString(), tone: "text-teal-600" },
   ];
@@ -200,7 +199,7 @@ export default function Reports() {
                   <Tooltip {...tooltipStyle} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Area type="monotone" dataKey="Tiếp nhận" stroke={BLUE} strokeWidth={2} fill="url(#gIn)" />
-                  <Area type="monotone" dataKey="Hoàn thành" stroke={GREEN} strokeWidth={2} fill="url(#gDone)" />
+                  <Area type="monotone" dataKey="Đã xử lý" stroke={GREEN} strokeWidth={2} fill="url(#gDone)" />
                 </AreaChart>
               </ChartCard>
             </div>

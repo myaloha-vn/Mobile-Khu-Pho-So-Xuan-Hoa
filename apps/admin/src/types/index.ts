@@ -1,4 +1,4 @@
-// ─── Kiểu dữ liệu dùng chung cho Dashboard điều hành Xuân Hoà Số ─────────────
+// ─── Kiểu dữ liệu dùng chung cho Workspace điều hành Xuân Hoà Số ─────────────
 
 export type Role =
   | "SUPER_ADMIN"
@@ -9,7 +9,7 @@ export type Role =
   | "NEIGHBORHOOD_STAFF";
 
 export type Module =
-  | "overview" | "tasks" | "content" | "feedback" | "neighborhoods"
+  | "overview" | "content" | "feedback" | "neighborhoods"
   | "waste" | "surveys" | "literacy" | "media" | "utilities"
   | "reports" | "users" | "settings";
 
@@ -31,8 +31,7 @@ export interface User {
 
 export type ContentType = "news" | "announcement" | "event" | "banner" | "literacy";
 export type ContentStatus =
-  | "draft" | "pending" | "needs_revision" | "approved"
-  | "scheduled" | "published" | "hidden";
+  | "draft" | "pending" | "scheduled" | "published";
 
 export interface ContentItem {
   id: string;
@@ -45,6 +44,7 @@ export interface ContentItem {
   gallery: string[];
   videoUrl?: string;
   hoodId: number | null;
+  hoodIds?: number[] | null;
   authorId: string;
   status: ContentStatus;
   createdAt: string;
@@ -71,8 +71,17 @@ export interface ApprovalEntry {
   note?: string;
 }
 
+/**
+ * Chờ duyệt: phản ánh vừa gửi lên, chờ bộ phận vận hành kiểm duyệt nội dung hợp lệ.
+ * Chờ xử lý: đã duyệt hợp lệ, chuyển tới đơn vị có thẩm quyền để bắt đầu xem xét.
+ * Đang xử lý: đơn vị đang kiểm tra hiện trường, xác minh, thực hiện biện pháp giải quyết.
+ * Đã xử lý: vấn đề đã giải quyết xong, kết quả đã công khai lên hệ thống.
+ * Từ chối: không được duyệt / từ chối tiếp nhận (nội dung không rõ ràng, trùng lặp,
+ * ngôn từ không phù hợp hoặc không thuộc phạm vi xử lý của hệ thống).
+ * (Cảnh báo sắp đến hạn / quá hạn không phải trạng thái riêng — xem slaState() trong utils/format.ts)
+ */
 export type FeedbackStatus =
-  | "new" | "assigned" | "processing" | "waiting" | "completed" | "reopened";
+  | "pending_review" | "pending" | "processing" | "resolved" | "rejected";
 export type Priority = "urgent" | "high" | "normal";
 
 export interface Feedback {
@@ -152,7 +161,7 @@ export interface Survey {
   limit: number | null;
   responses: number;
   publicResult: boolean;
-  status: "draft" | "open" | "closed";
+  status: "pending" | "open" | "closed";
   questions: SurveyQuestion[];
 }
 

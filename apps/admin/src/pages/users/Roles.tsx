@@ -5,7 +5,6 @@ import type { Action, Module, Role } from "../../types";
 
 const MODULES: { key: Module; label: string }[] = [
   { key: "overview", label: "Tổng quan" },
-  { key: "tasks", label: "Công việc" },
   { key: "content", label: "Nội dung" },
   { key: "feedback", label: "Phản ánh" },
   { key: "neighborhoods", label: "Khu phố" },

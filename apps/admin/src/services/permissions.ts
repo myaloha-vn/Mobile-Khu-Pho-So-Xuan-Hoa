@@ -10,31 +10,31 @@ const EDIT_DEL: Action[] = ["view", "create", "edit", "delete"];
 
 export const MATRIX: Matrix = {
   SUPER_ADMIN: {
-    overview: ALL, tasks: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
+    overview: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
     waste: ALL, surveys: ALL, literacy: ALL, media: ALL, utilities: ALL,
     reports: ALL, users: ALL, settings: ALL,
   },
   PHUONG_ADMIN: {
-    overview: ALL, tasks: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
+    overview: ALL, content: ALL, feedback: ALL, neighborhoods: ALL,
     waste: ALL, surveys: ALL, literacy: ALL, media: ALL, utilities: ALL,
     reports: ["view", "export"], users: ["view", "create", "edit"],
     settings: ["view", "edit"],
   },
   CONTENT_EDITOR: {
-    overview: VIEW, tasks: VIEW, content: EDIT_DEL, literacy: EDIT_DEL,
+    overview: VIEW, content: EDIT_DEL, literacy: EDIT_DEL,
     media: EDIT_DEL, neighborhoods: VIEW, reports: VIEW,
   },
   FEEDBACK_OFFICER: {
-    overview: VIEW, tasks: ["view", "edit"], feedback: ["view", "create", "edit", "approve", "export"],
+    overview: VIEW, feedback: ["view", "create", "edit", "approve", "export"],
     neighborhoods: VIEW, reports: ["view", "export"],
   },
   NEIGHBORHOOD_LEADER: {
-    overview: VIEW, tasks: ["view", "edit"], content: EDIT, literacy: VIEW,
+    overview: VIEW, content: EDIT, literacy: VIEW,
     feedback: ["view", "edit"], neighborhoods: ["view", "edit"], waste: VIEW,
     surveys: VIEW, media: EDIT,
   },
   NEIGHBORHOOD_STAFF: {
-    overview: VIEW, tasks: VIEW, content: ["view", "create"], feedback: VIEW,
+    overview: VIEW, content: ["view", "create"], feedback: VIEW,
     neighborhoods: VIEW, waste: VIEW, media: ["view", "create"],
   },
 };

@@ -149,7 +149,7 @@ export default function LedWall() {
           className="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200" title="Tải lại dữ liệu">
           <RefreshCw size={15} />
         </button>
-        <button onClick={() => navigate("/dashboard/overview")}
+        <button onClick={() => navigate("/workspace/overview")}
           className="h-9 px-3 rounded-lg bg-slate-100 text-slate-600 text-[13px] hover:bg-slate-200">Thoát</button>
       </div>
 

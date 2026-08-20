@@ -1,5 +1,5 @@
-import { type ReactNode } from "react";
-import { AlertCircle, Inbox, Loader2 } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { AlertCircle, ChevronDown, Inbox, Loader2, Search, X, Bold, Italic, Underline, List, ListOrdered, Link2, Heading } from "lucide-react";
 
 // ─── Thẻ nội dung ────────────────────────────────────────────────────────────
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -44,20 +44,16 @@ export function Badge({ tone = "slate", children }: { tone?: keyof typeof TONES 
 const CONTENT_STATUS: Record<string, { label: string; tone: string }> = {
   draft: { label: "Nháp", tone: "slate" },
   pending: { label: "Chờ duyệt", tone: "violet" },
-  needs_revision: { label: "Cần chỉnh sửa", tone: "amber" },
-  approved: { label: "Đã duyệt", tone: "blue" },
-  scheduled: { label: "Đã lên lịch", tone: "teal" },
+  scheduled: { label: "Đã lên lịch", tone: "amber" },
   published: { label: "Đã xuất bản", tone: "green" },
-  hidden: { label: "Đã ẩn", tone: "slate" },
 };
 
 const FEEDBACK_STATUS: Record<string, { label: string; tone: string }> = {
-  new: { label: "Mới tiếp nhận", tone: "blue" },
-  assigned: { label: "Đã phân công", tone: "violet" },
+  pending_review: { label: "Chờ duyệt", tone: "violet" },
+  pending: { label: "Chờ xử lý", tone: "blue" },
   processing: { label: "Đang xử lý", tone: "amber" },
-  waiting: { label: "Chờ bổ sung", tone: "slate" },
-  completed: { label: "Hoàn thành", tone: "green" },
-  reopened: { label: "Mở lại", tone: "red" },
+  resolved: { label: "Đã xử lý", tone: "green" },
+  rejected: { label: "Từ chối", tone: "red" },
 };
 
 export function StatusBadge({ status, kind = "content" }: { status: string; kind?: "content" | "feedback" }) {
@@ -146,5 +142,265 @@ export function Button({
       className={`inline-flex items-center justify-center rounded-lg border font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${sizes[size]} ${className}`}>
       {icon}{children}
     </button>
+  );
+}
+
+// ─── Multi-select có search + chọn tất cả ────────────────────────────────────
+export interface MultiSelectOption {
+  value: string;
+  label: string;
+}
+
+export function MultiSelect({
+  options,
+  selected,
+  onChange,
+  placeholder = "Chọn...",
+  searchPlaceholder = "Tìm kiếm...",
+}: {
+  options: MultiSelectOption[];
+  selected: string[];
+  onChange: (selected: string[]) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = options.filter((o) =>
+    o.label.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((o) => selected.includes(o.value));
+
+  function toggleAll() {
+    if (allFilteredSelected) {
+      // Bỏ chọn các item đang lọc
+      const filteredValues = new Set(filtered.map((o) => o.value));
+      onChange(selected.filter((v) => !filteredValues.has(v)));
+    } else {
+      // Chọn tất cả item đang lọc (merge, không trùng)
+      const merged = new Set(selected);
+      filtered.forEach((o) => merged.add(o.value));
+      onChange(Array.from(merged));
+    }
+  }
+
+  function toggleOne(value: string) {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  }
+
+  function clearAll(e: React.MouseEvent) {
+    e.stopPropagation();
+    onChange([]);
+  }
+
+  const selectedLabels = options
+    .filter((o) => selected.includes(o.value))
+    .map((o) => o.label);
+
+  return (
+    <div className="relative" ref={ref}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-[13px] text-left bg-white hover:border-slate-300 transition-colors focus:outline-none focus:border-blue-500"
+      >
+        <div className="flex-1 min-w-0 truncate">
+          {selected.length === 0 ? (
+            <span className="text-slate-400">{placeholder}</span>
+          ) : selected.length <= 2 ? (
+            <span className="text-slate-700">{selectedLabels.join(", ")}</span>
+          ) : (
+            <span className="text-slate-700">
+              Đã chọn {selected.length}/{options.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {selected.length > 0 && (
+            <span
+              onClick={clearAll}
+              className="p-0.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
+            >
+              <X size={14} />
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
+          {/* Search input */}
+          <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+            <Search size={14} className="text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-slate-400"
+              autoFocus
+            />
+          </div>
+
+          {/* Select all row */}
+          {filtered.length > 0 && (
+            <div
+              onClick={toggleAll}
+              className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-slate-100"
+            >
+              <Checkbox checked={allFilteredSelected} indeterminate={!allFilteredSelected && selected.length > 0} />
+              <span className="text-[13px] font-medium text-blue-600">
+                {allFilteredSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+              </span>
+            </div>
+          )}
+
+          {/* Options list */}
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-center text-[13px] text-slate-400">
+                Không tìm thấy kết quả
+              </div>
+            ) : (
+              filtered.map((o) => (
+                <div
+                  key={o.value}
+                  onClick={() => toggleOne(o.value)}
+                  className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-slate-50"
+                >
+                  <Checkbox checked={selected.includes(o.value)} />
+                  <span className="text-[13px] text-slate-700">{o.label}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Checkbox nhỏ cho MultiSelect ─────────────────────────────────────────────
+function Checkbox({ checked, indeterminate = false }: { checked: boolean; indeterminate?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-4 h-4 rounded border transition-colors ${
+        checked || indeterminate
+          ? "bg-blue-600 border-blue-600 text-white"
+          : "bg-white border-slate-300"
+      }`}
+    >
+      {checked && !indeterminate && (
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M2 5L4 7L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+      {indeterminate && <span className="w-2 h-0.5 bg-white rounded-full" />}
+    </span>
+  );
+}
+
+// ─── HTML Editor (contentEditable + toolbar) ──────────────────────────────────
+export function HtmlEditor({
+  value,
+  onChange,
+  rows = 12,
+}: {
+  value: string;
+  onChange: (html: string) => void;
+  rows?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Sync external value → contentEditable when it differs from current content
+  useEffect(() => {
+    if (ref.current && ref.current.innerHTML !== value) {
+      ref.current.innerHTML = value;
+    }
+  }, [value]);
+
+  function exec(command: string, val?: string) {
+    document.execCommand(command, false, val);
+    ref.current?.focus();
+    if (ref.current) onChange(ref.current.innerHTML);
+  }
+
+  function handleInput() {
+    if (ref.current) onChange(ref.current.innerHTML);
+  }
+
+  function handleLink() {
+    const url = window.prompt("Nhập đường dẫn:");
+    if (url) exec("createLink", url);
+  }
+
+  const btn =
+    "inline-flex items-center justify-center w-7 h-7 rounded text-slate-600 hover:bg-slate-200 transition-colors";
+
+  return (
+    <div className="rounded-lg border border-slate-200 overflow-hidden focus-within:border-blue-500 transition-colors">
+      {/* Toolbar */}
+      <div className="flex items-center gap-0.5 border-b border-slate-100 px-2 py-1.5 bg-slate-50">
+        <button type="button" className={btn} onClick={() => exec("bold")} title="In đậm">
+          <Bold size={15} />
+        </button>
+        <button type="button" className={btn} onClick={() => exec("italic")} title="In nghiêng">
+          <Italic size={15} />
+        </button>
+        <button type="button" className={btn} onClick={() => exec("underline")} title="Gạch chân">
+          <Underline size={15} />
+        </button>
+        <div className="w-px h-5 bg-slate-200 mx-1" />
+        <button type="button" className={btn} onClick={() => exec("formatBlock", "h3")} title="Tiêu đề">
+          <Heading size={15} />
+        </button>
+        <button type="button" className={btn} onClick={() => exec("formatBlock", "p")} title="Đoạn văn">
+          <span className="text-[12px] font-medium">¶</span>
+        </button>
+        <div className="w-px h-5 bg-slate-200 mx-1" />
+        <button type="button" className={btn} onClick={() => exec("insertUnorderedList")} title="Danh sách">
+          <List size={15} />
+        </button>
+        <button type="button" className={btn} onClick={() => exec("insertOrderedList")} title="Danh sách có thứ tự">
+          <ListOrdered size={15} />
+        </button>
+        <div className="w-px h-5 bg-slate-200 mx-1" />
+        <button type="button" className={btn} onClick={handleLink} title="Chèn liên kết">
+          <Link2 size={15} />
+        </button>
+      </div>
+      {/* Editable area */}
+      <div
+        ref={ref}
+        contentEditable
+        onInput={handleInput}
+        className="px-3 py-2.5 text-[13px] leading-relaxed outline-none prose prose-sm max-w-none focus:outline-none"
+        style={{ minHeight: `${rows * 24}px` }}
+      />
+    </div>
   );
 }
