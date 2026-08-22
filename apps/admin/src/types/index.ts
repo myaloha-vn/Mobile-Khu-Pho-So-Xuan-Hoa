@@ -129,15 +129,19 @@ export interface Neighborhood {
   active: boolean;
 }
 
+export interface WasteScheduleStop {
+  time: string;
+  location: string;
+}
+
 export interface WasteSchedule {
   id: string;
-  hoodId: number;
-  route: string;
+  routeName: string;
+  hoodIds: number[];
   weekdays: number[];
-  timeRange: string;
-  wasteType: string;
+  stops: WasteScheduleStop[];
   provider: string;
-  note: string;
+  phone: string;
   effectiveFrom: string;
   status: "active" | "paused";
 }

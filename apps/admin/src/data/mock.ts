@@ -282,15 +282,18 @@ export const CONTENTS: ContentItem[] = [
 ];
 
 // ─── 12 lịch thu gom rác ─────────────────────────────────────────────────────
+const padTime = (h: number, m: number) => `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 export const WASTE: WasteSchedule[] = Array.from({ length: 12 }, (_, i) => ({
   id: `ws-${i + 1}`,
-  hoodId: (i % 18) + 1,
-  route: `Đường số ${int(1, 20)} và các hẻm nhánh`,
+  routeName: `Tuyến Đường số ${int(1, 20)}`,
+  hoodIds: [(i % 18) + 1, ((i + 1) % 18) + 1].filter((v, idx, arr) => arr.indexOf(v) === idx),
   weekdays: i % 3 === 0 ? [2, 4, 6] : i % 3 === 1 ? [3, 5, 7] : [2, 5],
-  timeRange: i % 2 === 0 ? "05:00 - 07:00" : "17:00 - 19:00",
-  wasteType: pick(["Rác sinh hoạt", "Rác tái chế", "Rác cồng kềnh"]),
+  stops: [
+    { time: padTime(5 + Math.floor(i / 2), (i % 6) * 10), location: `Đường số ${int(1, 20)}` },
+    { time: padTime(5 + Math.floor(i / 2), Math.min(59, (i % 6) * 10 + 20)), location: `Hẻm ${int(1, 10)}A` },
+  ],
   provider: "Công ty Dịch vụ công ích",
-  note: i % 4 === 0 ? "Người dân để rác đúng giờ, đúng nơi quy định." : "",
+  phone: `090${String(1000000 + i * 111111).slice(0, 7)}`,
   effectiveFrom: dayOffset(-int(10, 60)),
   status: i % 6 === 0 ? "paused" : "active",
 }));

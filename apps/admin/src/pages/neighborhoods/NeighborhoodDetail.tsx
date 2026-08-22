@@ -20,7 +20,6 @@ const TABS = [
   { key: "feedback", label: "Phản ánh" },
   { key: "waste", label: "Lịch thu gom rác" },
   { key: "media", label: "Thư viện ảnh" },
-  { key: "display", label: "Cấu hình hiển thị" },
 ];
 
 export default function NeighborhoodDetail() {
@@ -115,10 +114,6 @@ export default function NeighborhoodDetail() {
               <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} className={field} />
             </div>
             <div className="lg:col-span-2">
-              <label className={label}>Ảnh đại diện</label>
-              <input value={draft.image} onChange={(e) => setDraft({ ...draft, image: e.target.value })} className={field} />
-            </div>
-            <div className="lg:col-span-2">
               <label className={label}>Giới thiệu ngắn</label>
               <textarea value={draft.intro} onChange={(e) => setDraft({ ...draft, intro: e.target.value })} rows={4} className={`${field} resize-none`} />
             </div>
@@ -171,13 +166,16 @@ export default function NeighborhoodDetail() {
         )}
 
         {tab === "waste" && (
-          waste.filter((w) => w.hoodId === hood.id).length === 0 ? <EmptyState title="Chưa có lịch thu gom rác" /> : (
+          waste.filter((w) => w.hoodIds.includes(hood.id)).length === 0 ? <EmptyState title="Chưa có lịch thu gom rác" /> : (
             <div className="divide-y divide-slate-100">
-              {waste.filter((w) => w.hoodId === hood.id).map((w) => (
+              {waste.filter((w) => w.hoodIds.includes(hood.id)).map((w) => (
                 <div key={w.id} className="px-5 py-3">
-                  <p className="text-[13.5px] font-medium text-slate-800">{w.route}</p>
+                  <p className="text-[13.5px] font-medium text-slate-800">{w.routeName}</p>
                   <p className="text-[12.5px] text-slate-500 mt-0.5">
-                    {w.weekdays.map((d) => WEEKDAY_LABEL[d]).join(", ")} · {w.timeRange} · {w.wasteType}
+                    {w.weekdays.map((d) => WEEKDAY_LABEL[d]).join(", ")} · {w.stops.length} điểm
+                  </p>
+                  <p className="text-[12px] text-slate-500 mt-0.5">
+                    {w.provider}{w.phone ? ` · ${w.phone}` : ""}
                   </p>
                 </div>
               ))}
@@ -193,25 +191,6 @@ export default function NeighborhoodDetail() {
             {media.filter((m) => m.hoodId === hood.id).length === 0 && (
               <div className="col-span-full"><EmptyState title="Chưa có ảnh cho khu phố này" /></div>
             )}
-          </div>
-        )}
-
-        {tab === "display" && (
-          <div className="p-5 space-y-3 max-w-2xl">
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3">
-              <span className="text-[13px] text-slate-700">Hiển thị khu phố trên trang công khai</span>
-              <input type="checkbox" checked={draft.active} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} className="w-4 h-4" />
-            </label>
-            <div>
-              <label className={label}>Tin nổi bật của khu phố</label>
-              <select className={field} defaultValue="">
-                <option value="">-- Chọn tin nổi bật --</option>
-                {hoodContents("news").map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-              </select>
-            </div>
-            <Allow module="neighborhoods" action="edit">
-              <Button icon={<Save size={15} />} onClick={saveInfo}>Lưu cấu hình hiển thị</Button>
-            </Allow>
           </div>
         )}
       </Card>
